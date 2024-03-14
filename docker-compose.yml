@@ -1,21 +1,22 @@
 version: "2"
 services:
   app:
-    build: ./api
+    build: .
     links:
       - db
     ports:
       - "8080:5000"
     depends_on:
       - db
-
+    volumes:
+      - ./logs:/var/log
 
   db:
     image: mysql:8.0
-    ports:
-      - "32000:3306"
     environment:
+      MYSQL_USER: halodb
+      MYSQL_PASSWORD: halodb
       MYSQL_ROOT_PASSWORD: root
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql:/docker-entrypoint-initdb.d:ro
       - ./data:/var/lib/mysql
