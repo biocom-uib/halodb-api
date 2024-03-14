@@ -14,6 +14,7 @@ services:
   db:
     image: mysql:8.0
     environment:
+      MYSQL_DATABASE: HaloDB
       MYSQL_USER: halodb
       MYSQL_PASSWORD: halodb
       MYSQL_ROOT_PASSWORD: root
