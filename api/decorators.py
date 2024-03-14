@@ -3,7 +3,7 @@ from functools import wraps
 from schema import SchemaError
 from werkzeug.exceptions import HTTPException
 
-from api.logging import logger
+from api.log import logger
 
 
 def error(message: str, status_code: int, **kwargs):
