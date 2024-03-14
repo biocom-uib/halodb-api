@@ -1,9 +1,10 @@
 import json
 import os
+import random
 
 from typing import Optional
 
-from flask import Flask, Response, send_from_directory
+from flask import Flask, Response, send_from_directory, jsonify
 from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
@@ -41,6 +42,23 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
     logger.info(f"Request received for { email = } with { params = }")
     return {"message": "OK"}
 
+
+@app.route('/upload/sample/', methods=['POST'])
+def upload_sample():
+    return jsonify({"message": "OK"})
+
+
+@app.route('/query/sample_list/', methods=['GET'])
+def get_sample_list():
+    random.seed()
+    start = 5
+    end = 11 + random.randint(0, 10)
+    indexes = list(range(start, end))
+    random.shuffle(indexes)
+
+    samples = [{"id": idx, "name": "Sample {}".format(idx)} for idx in indexes]
+
+    return Response(json.dumps(samples), mimetype="application/json")
 
 @app.route('/query/sample/<id>/', methods=['GET'])
 def get_sample(id=None):
