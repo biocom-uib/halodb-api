@@ -1,4 +1,3 @@
-from sqlalchemy import Column, Integer, String, Float
 
 from api.db.db import get_session, db
 

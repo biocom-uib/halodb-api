@@ -3,7 +3,7 @@ import os
 
 from typing import Optional
 
-from flask import Flask, jsonify, Response, send_from_directory
+from flask import Flask, Response, send_from_directory
 from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
