@@ -1,3 +1,4 @@
+import os
 import logging
 from flask_log_request_id import RequestIDLogFilter
 from flask import has_request_context, request
@@ -24,11 +25,12 @@ def setup_logger(app, gunicorn: bool):
     else:
         _logger.setLevel(logging.INFO)
 
+    pid = os.getpid()
     for handler in _logger.handlers:
         handler.addFilter(RequestEndpointLogFilter())
         # handler.addFilter(RequestIDLogFilter())
         # handler.setFormatter(logging.Formatter("[%(levelname)s][%(request_id)s][%(endpoint)s] %(asctime)s - %(message)s"))
-        handler.setFormatter(logging.Formatter("[%(levelname)s][%(endpoint)s] %(asctime)s - %(message)s"))
+        handler.setFormatter(logging.Formatter(f"[{pid}][%(levelname)s][%(endpoint)s] %(asctime)s - %(message)s"))
 
     return _logger
 
