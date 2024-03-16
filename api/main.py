@@ -1,6 +1,3 @@
-import time
-time.sleep(30)
-
 import json
 import os
 import random
