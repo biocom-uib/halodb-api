@@ -3,7 +3,7 @@ from functools import wraps
 from schema import SchemaError
 from werkzeug.exceptions import HTTPException
 
-from api.log import logger
+from api import log
 
 
 def error(message: str, status_code: int, **kwargs):
@@ -29,7 +29,7 @@ def get_params(func):
 def log_params(func):
     @wraps(func)
     def run(params, *args, **kwargs):
-        logger.debug(f"{params = }")
+        log.debug(f"{params = }")
         return func(params, *args, **kwargs)
 
     return run
@@ -42,19 +42,19 @@ def wrap_error(func):
             try:
                 return func(*args, **kwargs)
             except AbortError as e:
-                logger.exception(e)
+                log.exception(e)
                 return error(e.message, e.status_code, **e.extra)
             except HTTPException as e:
                 if e.code == 200:
                     extra = getattr(e, "extra", {}) or {}
                     return ok_message(message=e.description, **extra)
-                logger.exception(e)
+                log.exception(e)
                 return error(e.description, e.code)
             except SchemaError as e:
-                logger.exception(e)
+                log.exception(e)
                 return error(str(e), 400)
             except Exception as e:
-                logger.exception(e)
+                log.exception(e)
                 return error("Unknown error", 500)
         resp = inner()
         return resp
