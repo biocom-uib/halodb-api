@@ -1,4 +1,4 @@
-version: "3"
+version: "2"
 services:
   app:
     build: .
@@ -8,6 +8,8 @@ services:
       - "5000:5000"
     depends_on:
       - db
+      # db:
+      #   condition: service_healthy
     volumes:
       - ./logs:/var/log
 
@@ -19,11 +21,11 @@ services:
       MYSQL_PASSWORD: halodb
       MYSQL_ROOT_PASSWORD: root
       MYSQL_PORT: 3306
-    healthcheck:
-      test: "mysql -u$$MUSQL_USER -p$$MYSQL_PASSWORD content -e 'select 1'"
-      interval: 1s
-      retries: 120
+    # healthcheck:
+    #  - test: "mysql -u$$MYSQL_USER -p$$MYSQL_PASSWORD content -e 'select 1'"
+    #  - interval: 1s
+    #  - retries: 120
     volumes:
       - ./sql:/docker-entrypoint-initdb.d:ro
-      - ./data:/var/lib/mysql
-      # - /data/shared/halodb/db_data:/var/lib/mysql
+      - ./data/db_data:/var/lib/mysql
+      # - /data/shared/halodb/db_data/data:/var/lib/mysql
