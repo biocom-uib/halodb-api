@@ -1,5 +1,5 @@
 
-USE `HaloDB` ;
+USE `halodb` ;
 
 
 insert into method(description) values
@@ -8,9 +8,8 @@ insert into method(description) values
 ("OrthoDB"),
 ("Kraken"),
 ("BlobTools"),
-("Anvi’o "),
+("Anvi'o "),
 ("MiGA");
-
 
 
 insert into oxygen (relationship) values 
@@ -20,32 +19,35 @@ insert into oxygen (relationship) values
 ("Microarophiles"), 
 ("Aerotolerant anaerobes");
 
-insert into temperature (category) values 
-("Psychrophyles (-20ºC, 10ºC]"),
-("Mesophiles (10ºC, 45ºC]"),
-("Moderate thermophiles (45ºC, 60ºC]"),
-("Thermophiles (60ºC, 80ºC]"),
-("Hyperthermophiles (80ºC, 122ºC)");
+insert into temperature (category, vmin, vmax) values 
+('Psychrophyles (-20ºC, 10ºC]',-20,10),
+('Mesophiles (10ºC, 45ºC]',10,45),
+('Moderate thermophiles (45ºC, 60ºC]',45,60),
+('Thermophiles (60ºC, 80ºC]',60,80),
+('Hyperthermophiles (80ºC, 122ºC)',80,122);
 
-insert into ph (category) values 
-("Ultra acidic (-∞, 3.5]"),
-("Extremely acidic (3.5, 4.5]"),
-("Very strongly acidic (4.5, 5.0]"),
-("Strongly acidic (5.0, 5.5]"),
-("Moderately acidic (5.5, 6.0]"),
-("Slightly acidic (6.0, 6.5]"),
-("Neutral (6.5, 7.3]"),
-("Slightly alkaline (7.3, 7.8]"),
-("Moderately alkaline (7.8, 8.4]"),
-("Strongly alkaline (8.4, 9.0]"),
-("Very strongly alkaline (9.0, 10.5]"),
-("Hyper alkaline (10.5, +∞)");
 
-insert into salinity (category) values
-("Halotolerants [0%, 1%)"), 
-("slight halophiles [1%, 3%)"),
-("Moderate halophiles [3%, 15%)"),
-("Extreme halophiles [15%, 32%]");
+insert into ph (category, vmin, vmax) values
+('Ultra acidic (-∞, 3.5]',-10000.0,3.5),
+('Extremely acidic (3.5, 4.5]',3.5,4.5),
+('Very strongly acidic (4.5, 5.0]',4.5,5.0),
+('Strongly acidic (5.0, 5.5]',5.0,5.5),
+('Moderately acidic (5.5, 6.0]',5.5,6.0),
+('Slightly acidic (6.0, 6.5]',6.0,6.5),
+('Neutral (6.5, 7.3]',6.5,7.3),
+('Slightly alkaline (7.3, 7.8]',7.3,7.8),
+('Moderately alkaline (7.8, 8.4]',7.8,8.4),
+('Strongly alkaline (8.4, 9.0]',8.4,9.0),
+('Very strongly alkaline (9.0, 10.5]',9.0,10.5),
+('Hyper alkaline (10.5, +∞)',10.5,10000.0);
+
+
+insert into salinity (category, vmin, vmax) values
+('Halotolerants (0%, 1%]',0.0,1.0),
+('Slight halophiles (1%, 3%]',1.0,3.0),
+('Moderate halophiles (3%, 15%]',3.0,15.0),
+('Extreme halophiles (15%, 32%]',15.0,32.0);
+
 
 -- ######################################## 
 -- insert into salinity (category) values
