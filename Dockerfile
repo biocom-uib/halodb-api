@@ -7,6 +7,9 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
               default-libmysqlclient-dev \
               pkg-config
 
+# Create the mysql user manager instead of the default one, to use with a volume
+RUN adduser --disabled-password --gecos "" --force-badname --gid 27  --uid 27 mysql
+
 # Create a group and an user to avoid running the app as root
 RUN addgroup --gid 1002 biocom
 RUN adduser --disabled-password --gecos "" --force-badname --gid 1002 --uid 1021 halodb
@@ -32,8 +35,9 @@ COPY sql /opt/halodb-api/sql
 RUN chown -R halodb:biocom /opt/halodb-api/
 
 # Switch to the new user
-USER halodb
+# USER halodb
 
 EXPOSE 5000
 
 CMD exec gunicorn --bind=:5000 --workers=4 --threads=16 --timeout=0 --log-level=INFO api.main:app
+
