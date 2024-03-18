@@ -16,6 +16,7 @@ from api.auth import required_token
 from api.decorators import wrap_error, get_params, log_params
 
 from api.db.db import SQLALCHEMY_DATABASE_URI, DatabaseInstance
+
 # from api.db.models  # Do not import yet, the database must be initialized first
 
 
@@ -30,6 +31,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['static_folder'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static')
 
+mocked_sample_file = 'sample42.json'
+
 log.info('Waiting for the database to be ready')
 db = DatabaseInstance.wait_for_connection_and_create_instance(wait_time=5, attempts=-1)
 
@@ -41,6 +44,7 @@ else:
 
 # This has to be imported here
 from api.db.models import Temperature, Ph, Salinity
+
 
 @app.route("/")
 @wrap_error
@@ -66,7 +70,14 @@ def get_sample_list():
     indexes = list(range(start, end))
     random.shuffle(indexes)
 
-    samples = [{"id": idx, "name": "Sample {}".format(idx)} for idx in indexes]
+    file = os.path.join(app.config['static_folder'], mocked_sample_file)
+    with open(file, 'r') as json_file:
+        sample = json.load(json_file)
+
+    samples = [sample.copy() for idx in indexes]
+    for idx in range(len(indexes)):
+        samples[idx]['id'] = indexes[idx]
+        samples[idx]['name'] = samples[idx]['name'] + f'Sample_{indexes[idx]}'
 
     return Response(json.dumps(samples), mimetype="application/json")
 
@@ -74,7 +85,7 @@ def get_sample_list():
 @app.route('/query/sample/<id>/', methods=['GET'])
 def get_sample(id=None):
     log.info(f'Requested sample with {id = }')
-    return send_from_directory(app.config['static_folder'], 'sample42.json')
+    return send_from_directory(app.config['static_folder'], mocked_sample_file)
 
 
 @app.route('/query/<string:table>/<float:value>', methods=['GET'])
