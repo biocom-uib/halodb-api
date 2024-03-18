@@ -22,5 +22,3 @@ services:
     user: '1021:1002'
     volumes:
       - ./sql:/docker-entrypoint-initdb.d:ro
-      - ./volumes/mysql_data:/var/lib/mysql
-      # - /data/shared/halodb/db_data/data:/var/lib/mysql
