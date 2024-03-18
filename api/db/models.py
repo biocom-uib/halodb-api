@@ -2,6 +2,12 @@ from api.db import db
 from api.db.db import DatabaseInstance
 
 
+if DatabaseInstance.get() is None:
+    raise RuntimeError('The database has not been initialized yet, this module should be imported later')
+
+print(DatabaseInstance.get().get_metadata().tables.keys())
+
+
 class HaloDatabaseInstanceModel(db.Base):
     __abstract__ = True
 
@@ -10,7 +16,7 @@ class HaloDatabaseInstanceModel(db.Base):
 
 
 class Author(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('author')
+    __table__ = DatabaseInstance.get().get_table('author')
 
     def __init__(self, name):
         self.name = name
@@ -29,17 +35,17 @@ class Author(HaloDatabaseInstanceModel):
     def set(id, name):
         author = Author.query.get(id)
         author.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         author = Author.query.get(id)
-        DatabaseInstance.get_session().delete(author)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(author)
+        DatabaseInstance.get().session().commit()
 
 
 class Experiment(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('experiment')
+    __table__ = DatabaseInstance.get().get_table('experiment')
 
     def __init__(self, name):
         self.name = name
@@ -58,17 +64,17 @@ class Experiment(HaloDatabaseInstanceModel):
     def set(id, name):
         experiment = Experiment.query.get(id)
         experiment.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         experiment = Experiment.query.get(id)
-        DatabaseInstance.get_session().delete(experiment)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(experiment)
+        DatabaseInstance.get().session().commit()
 
 
 class Fraction(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('fraction')
+    __table__ = DatabaseInstance.get().get_table('fraction')
 
     def __init__(self, name):
         self.name = name
@@ -87,17 +93,17 @@ class Fraction(HaloDatabaseInstanceModel):
     def set(id, name):
         fraction = Fraction.query.get(id)
         fraction.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         fraction = Fraction.query.get(id)
-        DatabaseInstance.get_session().delete(fraction)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(fraction)
+        DatabaseInstance.get().session().commit()
 
 
 class Group(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('group')
+    __table__ = DatabaseInstance.get().get_table('group')
 
     def __init__(self, name):
         self.name = name
@@ -116,17 +122,17 @@ class Group(HaloDatabaseInstanceModel):
     def set(id, name):
         group = Group.query.get(id)
         group.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         group = Group.query.get(id)
-        DatabaseInstance.get_session().delete(group)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(group)
+        DatabaseInstance.get().session().commit()
 
 
 class GroupSharingSample(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('group_sharing_sample')
+    __table__ = DatabaseInstance.get().get_table('group_sharing_sample')
 
     def __init__(self, group_id, sample_id):
         self.group_id = group_id
@@ -147,17 +153,17 @@ class GroupSharingSample(HaloDatabaseInstanceModel):
         group_sharing_sample = GroupSharingSample.query.get((group_id, sample_id))
         group_sharing_sample.group_id = group_id
         group_sharing_sample.sample_id = sample_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(group_id, sample_id):
         group_sharing_sample = GroupSharingSample.query.get((group_id, sample_id))
-        DatabaseInstance.get_session().delete(group_sharing_sample)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(group_sharing_sample)
+        DatabaseInstance.get().session().commit()
 
 
 class Keywords(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('keywords')
+    __table__ = DatabaseInstance.get().get_table('keywords')
 
     def __init__(self, name):
         self.name = name
@@ -176,17 +182,17 @@ class Keywords(HaloDatabaseInstanceModel):
     def set(id, name):
         keywords = Keywords.query.get(id)
         keywords.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         keywords = Keywords.query.get(id)
-        DatabaseInstance.get_session().delete(keywords)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(keywords)
+        DatabaseInstance.get().session().commit()
 
 
 class Method(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('method')
+    __table__ = DatabaseInstance.get().get_table('method')
 
     def __init__(self, name):
         self.name = name
@@ -203,16 +209,16 @@ class Method(HaloDatabaseInstanceModel):
     def set(id, name):
         method = Method.query.get(id)
         method.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     def delete(id):
         method = Method.query.get(id)
-        DatabaseInstance.get_session().delete(method)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(method)
+        DatabaseInstance.get().session().commit()
 
 
 class Oxygen(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('oxygen')
+    __table__ = DatabaseInstance.get().get_table('oxygen')
 
     # __tablename__ = 'oxygen'
 
@@ -230,8 +236,8 @@ class Oxygen(HaloDatabaseInstanceModel):
 
 
     def save(self):
-        DatabaseInstance.get_session().add(self)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().add(self)
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def get(id):
@@ -241,17 +247,17 @@ class Oxygen(HaloDatabaseInstanceModel):
     def set(id, relationship):
         oxygen = Oxygen.query.get(id)
         oxygen.relationship = relationship
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         oxygen = Oxygen.query.get(id)
-        DatabaseInstance.get_session().delete(oxygen)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(oxygen)
+        DatabaseInstance.get().session().commit()
 
 
 class Ph(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('ph')
+    __table__ = DatabaseInstance.get().get_table('ph')
 
     def __init__(self, relationship):
         self.relationship = relationship
@@ -270,17 +276,17 @@ class Ph(HaloDatabaseInstanceModel):
     def set(id, relationship):
         ph = Ph.query.get(id)
         ph.relationship = relationship
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         ph = Ph.query.get(id)
-        DatabaseInstance.get_session().delete(ph)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(ph)
+        DatabaseInstance.get().session().commit()
 
 
 class Project(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('project')
+    __table__ = DatabaseInstance.get().get_table('project')
 
     def __init__(self, name):
         self.name = name
@@ -299,17 +305,17 @@ class Project(HaloDatabaseInstanceModel):
     def set(id, name):
         project = Project.query.get(id)
         project.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         project = Project.query.get(id)
-        DatabaseInstance.get_session().delete(project)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(project)
+        DatabaseInstance.get().session().commit()
 
 
 class Salinity(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('salinity')
+    __table__ = DatabaseInstance.get().get_table('salinity')
 
     def __init__(self, relationship):
         self.relationship = relationship
@@ -328,11 +334,11 @@ class Salinity(HaloDatabaseInstanceModel):
     def set(id, relationship):
         salinity = Salinity.query.get(id)
         salinity.relationship = relationship
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
 
 class Sample(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('sample')
+    __table__ = DatabaseInstance.get().get_table('sample')
 
     def __init__(self, name):
         self.name = name
@@ -351,17 +357,17 @@ class Sample(HaloDatabaseInstanceModel):
     def set(id, name):
         sample = Sample.query.get(id)
         sample.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         sample = Sample.query.get(id)
-        DatabaseInstance.get_session().delete(sample)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(sample)
+        DatabaseInstance.get().session().commit()
 
 
 class SampleHasKeywords(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('sample_has_keywords')
+    __table__ = DatabaseInstance.get().get_table('sample_has_keywords')
 
     def __init__(self, sample_id, keywords_id):
         self.sample_id = sample_id
@@ -382,17 +388,17 @@ class SampleHasKeywords(HaloDatabaseInstanceModel):
         sample_has_keywords = SampleHasKeywords.query.get((sample_id, keywords_id))
         sample_has_keywords.sample_id = sample_id
         sample_has_keywords.keywords_id = keywords_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(sample_id, keywords_id):
         sample_has_keywords = SampleHasKeywords.query.get((sample_id, keywords_id))
-        DatabaseInstance.get_session().delete(sample_has_keywords)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(sample_has_keywords)
+        DatabaseInstance.get().session().commit()
 
 
 class Target(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('target')
+    __table__ = DatabaseInstance.get().get_table('target')
 
     def __init__(self, name):
         self.name = name
@@ -411,17 +417,17 @@ class Target(HaloDatabaseInstanceModel):
     def set(id, name):
         target = Target.query.get(id)
         target.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         target = Target.query.get(id)
-        DatabaseInstance.get_session().delete(target)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(target)
+        DatabaseInstance.get().session().commit()
 
 
 class Temperature(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('temperature')
+    __table__ = DatabaseInstance.get().get_table('temperature')
 
     def __init__(self, relationship):
         self.relationship = relationship
@@ -441,16 +447,16 @@ class Temperature(HaloDatabaseInstanceModel):
     def set(id, relationship):
         temperature = Temperature.query.get(id)
         temperature.relationship = relationship
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         temperature = Temperature.query.get(id)
-        DatabaseInstance.get_session().delete(temperature)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(temperature)
+        DatabaseInstance.get().session().commit()
 
 class User(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('user')
+    __table__ = DatabaseInstance.get().get_table('user')
 
     def __init__(self, name):
         self.name = name
@@ -469,17 +475,17 @@ class User(HaloDatabaseInstanceModel):
     def set(id, name):
         user = User.query.get(id)
         user.name = name
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(id):
         user = User.query.get(id)
-        DatabaseInstance.get_session().delete(user)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(user)
+        DatabaseInstance.get().session().commit()
 
 
 class UserExperiment(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('user_experiment')
+    __table__ = DatabaseInstance.get().get_table('user_experiment')
 
     def __init__(self, user_id, experiment_id):
         self.user_id = user_id
@@ -500,17 +506,17 @@ class UserExperiment(HaloDatabaseInstanceModel):
         user_experiment = UserExperiment.query.get((user_id, experiment_id))
         user_experiment.user_id = user_id
         user_experiment.experiment_id = experiment_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(user_id, experiment_id):
         user_experiment = UserExperiment.query.get((user_id, experiment_id))
-        DatabaseInstance.get_session().delete(user_experiment)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(user_experiment)
+        DatabaseInstance.get().session().commit()
 
 
 class UserHasGroup(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('user_has_group')
+    __table__ = DatabaseInstance.get().get_table('user_has_group')
 
     def __init__(self, user_id, group_id):
         self.user_id = user_id
@@ -531,17 +537,17 @@ class UserHasGroup(HaloDatabaseInstanceModel):
         user_has_group = UserHasGroup.query.get((user_id, group_id))
         user_has_group.user_id = user_id
         user_has_group.group_id = group_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(user_id, group_id):
         user_has_group = UserHasGroup.query.get((user_id, group_id))
-        DatabaseInstance.get_session().delete(user_has_group)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(user_has_group)
+        DatabaseInstance.get().session().commit()
 
 
 class UserProject(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('user_project')
+    __table__ = DatabaseInstance.get().get_table('user_project')
 
     def __init__(self, user_id, project_id):
         self.user_id = user_id
@@ -562,17 +568,17 @@ class UserProject(HaloDatabaseInstanceModel):
         user_project = UserProject.query.get((user_id, project_id))
         user_project.user_id = user_id
         user_project.project_id = project_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(user_id, project_id):
         user_project = UserProject.query.get((user_id, project_id))
-        DatabaseInstance.get_session().delete(user_project)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(user_project)
+        DatabaseInstance.get().session().commit()
 
 
 class UserSharedSample(HaloDatabaseInstanceModel):
-    __table__ = DatabaseInstance.get_table('user_shared_sample')
+    __table__ = DatabaseInstance.get().get_table('user_shared_sample')
 
     def __init__(self, user_id, sample_id):
         self.user_id = user_id
@@ -593,10 +599,10 @@ class UserSharedSample(HaloDatabaseInstanceModel):
         user_shared_sample = UserSharedSample.query.get((user_id, sample_id))
         user_shared_sample.user_id = user_id
         user_shared_sample.sample_id = sample_id
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().commit()
 
     @staticmethod
     def delete(user_id, sample_id):
         user_shared_sample = UserSharedSample.query.get((user_id, sample_id))
-        DatabaseInstance.get_session().delete(user_shared_sample)
-        DatabaseInstance.get_session().commit()
+        DatabaseInstance.get().session().delete(user_shared_sample)
+        DatabaseInstance.get().session().commit()

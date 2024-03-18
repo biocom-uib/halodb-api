@@ -12,11 +12,11 @@ from flask_limiter.util import get_remote_address
 
 from api import log
 from api.auth import required_token
-from api.db.models import Temperature, Ph, Salinity
 
 from api.decorators import wrap_error, get_params, log_params
 
-from api.db.db import SQLALCHEMY_DATABASE_URI, wait_for_connection_and_create_instance
+from api.db.db import SQLALCHEMY_DATABASE_URI, DatabaseInstance
+# from api.db.models  # Do not import yet, the database must be initialized first
 
 
 app = Flask(__name__)
@@ -31,11 +31,16 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['static_folder'] = os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'static')
 
 log.info('Waiting for the database to be ready')
-db = wait_for_connection_and_create_instance(wait_time=5, attempts=-1)
-log.info('The database is ready')
+db = DatabaseInstance.wait_for_connection_and_create_instance(wait_time=5, attempts=-1)
 
-db.init_app(app)
+if db is not None:
+    log.info('The database is ready')
+    db.init_app(app)
+else:
+    log.error('The database could not be initialized')
 
+# This has to be imported here
+from api.db.models import Temperature, Ph, Salinity
 
 @app.route("/")
 @wrap_error
@@ -91,7 +96,7 @@ def get_classification_data(table, value):
 
 @app.route('/query/<string:table>/')
 def get_table_data(table=None):
-    o2 = db.get_session().query(db.get_table(table)).all()
+    o2 = db.session().query(db.get_table(table)).all()
 
     o2_list = [dict(row._mapping) for row in o2]
 

@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Self, Optional
 
 import MySQLdb
 from flask_sqlalchemy import SQLAlchemy
@@ -20,62 +20,57 @@ SQLALCHEMY_DATABASE_URI = (f"mysql://{DATABASE_USERNAME}:{DATABASE_PASSWORD}"
 
 Base = declarative_base()
 
-
 class DatabaseInstance:
-    # Class attributes
-    engine = create_engine(SQLALCHEMY_DATABASE_URI)
-    db = SQLAlchemy(model_class=Base)
-    db.metadata.reflect(engine)
+    _instance = None
 
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    def __init__(self):
+        self.db = SQLAlchemy(model_class=Base)
+        self.engine = create_engine(SQLALCHEMY_DATABASE_URI)
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.db.metadata.reflect(self.engine)
 
-    @staticmethod
-    def get_session():
-        session = DatabaseInstance.SessionLocal()
-        try:
-            return DatabaseInstance.SessionLocal()
-        finally:
-            session.close()
+    def init_app(self, app):
+        return self.db.init_app(app)
 
-    @staticmethod
-    def get_db():
-        return DatabaseInstance.db
+    def session(self):
+        return self.SessionLocal()
 
-    @staticmethod
-    def get_metadata():
-        return DatabaseInstance.db.metadata
+    def get_db(self):
+        return self.db
 
-    @staticmethod
-    def get_table(table_name: str):
-        return DatabaseInstance.db.metadata.tables[table_name]
+    def get_metadata(self):
+        return self.db.metadata
+
+    def get_table(self, table_name: str):
+        return self.db.metadata.tables[table_name]
 
     @staticmethod
-    def init_app(app):
-        return DatabaseInstance.db.init_app(app)
+    def wait_for_connection_and_create_instance(wait_time: int, attempts: int) -> Optional[Self]:
+        if DatabaseInstance._instance is not None:
+            raise RuntimeError('The global instance already exists')
 
-                with conn.cursor() as c:
-                    if c.execute('select 1;'):
-                        return DatabaseInstance()
-        except MySQLdb.OperationalError as e:
-            log.exception(e)
+        def connect():
+            return MySQLdb.connect(
+                host=DATABASE_HOST, user=DATABASE_USERNAME, password=DATABASE_PASSWORD,
+                port=DATABASE_PORT, database=DATABASE_NAME, connect_timeout=20)
 
-def wait_for_connection_and_create_instance(wait_time: int, attempts: int) -> Optional[DatabaseInstance]:
-    def connect():
-        return MySQLdb.connect(
-            host=DATABASE_HOST, user=DATABASE_USERNAME, password=DATABASE_PASSWORD,
-            port=DATABASE_PORT, database=DATABASE_NAME, connect_timeout=20)
+        while attempts != 0:
+            try:
+                with connect() as conn:
+                    if not conn:
+                        continue
 
-    while attempts != 0:
-        try:
-            with connect() as conn:
-                if not conn:
-                    continue
+                    with conn.cursor() as c:
+                        if c.execute('select 1;'):
+                            instance = DatabaseInstance()
+                            DatabaseInstance._instance = instance
+                            return instance
+            except MySQLdb.OperationalError as e:
+                log.exception(e)
 
-                with conn.cursor() as c:
-                    if c.execute('select 1;'):
-                        return DatabaseInstance()
-        except MySQLdb.OperationalError as e:
-            log.exception(e)
+            time.sleep(wait_time)
+            attempts -= 1
 
-        time.sleep(wait_time)
-        attempts -= 1
+    @staticmethod
+    def get() -> Self:
+        return DatabaseInstance._instance
