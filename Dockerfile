@@ -15,7 +15,6 @@ RUN addgroup --gid 1002 biocom
 RUN adduser --disabled-password --gecos "" --force-badname --gid 1002 --uid 1021 halodb
 RUN echo 'halodb:m3t4d4g' | chpasswd
 
-
 # Upgrade pip and add google packages
 RUN pip3 install --upgrade pip setuptools
 RUN pip3 install keyring keyrings.google-artifactregistry-auth

@@ -18,7 +18,6 @@ DATABASE_NAME = config.DATABASE_NAME
 SQLALCHEMY_DATABASE_URI = (f"mysql://{DATABASE_USERNAME}:{DATABASE_PASSWORD}"
                            f"@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
 
-
 Base = declarative_base()
 
 
@@ -54,6 +53,11 @@ class DatabaseInstance:
     def init_app(app):
         return DatabaseInstance.db.init_app(app)
 
+                with conn.cursor() as c:
+                    if c.execute('select 1;'):
+                        return DatabaseInstance()
+        except MySQLdb.OperationalError as e:
+            log.exception(e)
 
 def wait_for_connection_and_create_instance(wait_time: int, attempts: int) -> Optional[DatabaseInstance]:
     def connect():

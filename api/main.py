@@ -18,6 +18,7 @@ from api.decorators import wrap_error, get_params, log_params
 
 from api.db.db import SQLALCHEMY_DATABASE_URI, wait_for_connection_and_create_instance
 
+
 app = Flask(__name__)
 CORS(app)
 RequestID(app)
