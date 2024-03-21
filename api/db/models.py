@@ -1,11 +1,8 @@
 from api.db import db
 from api.db.db import DatabaseInstance
 
-
 if DatabaseInstance.get() is None:
     raise RuntimeError('The database has not been initialized yet, this module should be imported later')
-
-print(DatabaseInstance.get().get_metadata().tables.keys())
 
 
 class HaloDatabaseInstanceModel(db.Base):
@@ -28,6 +25,16 @@ class Author(HaloDatabaseInstanceModel):
         return f'<Author {self.name}>'
 
     @staticmethod
+    def find_by_user(user_id):
+        return Author.query.filter(Author.user_id == user_id).first()
+
+    @staticmethod
+    def save(author):
+        session = DatabaseInstance.get().session()
+        session.add(author)
+        session.commit()
+
+    @staticmethod
     def get(id):
         return Author.query.get(id)
 
@@ -40,8 +47,9 @@ class Author(HaloDatabaseInstanceModel):
     @staticmethod
     def delete(id):
         author = Author.query.get(id)
-        DatabaseInstance.get().session().delete(author)
-        DatabaseInstance.get().session().commit()
+        session = DatabaseInstance.get().session()
+        session.delete(author)
+        session.commit()
 
 
 class Experiment(HaloDatabaseInstanceModel):
@@ -234,11 +242,6 @@ class Oxygen(HaloDatabaseInstanceModel):
     def __str__(self):
         return f'{self.relationship}'
 
-
-    def save(self):
-        DatabaseInstance.get().session().add(self)
-        DatabaseInstance.get().session().commit()
-
     @staticmethod
     def get(id):
         return Oxygen.query.get(id)
@@ -360,10 +363,15 @@ class Sample(HaloDatabaseInstanceModel):
         DatabaseInstance.get().session().commit()
 
     @staticmethod
+    def find_by_user(user_id):
+        return Sample.query.filter(Sample.user_id == user_id).all()
+
+    @staticmethod
     def delete(id):
         sample = Sample.query.get(id)
-        DatabaseInstance.get().session().delete(sample)
-        DatabaseInstance.get().session().commit()
+        session = DatabaseInstance.get().session()
+        session.delete(sample)
+        session.commit()
 
 
 class SampleHasKeywords(HaloDatabaseInstanceModel):
@@ -442,7 +450,6 @@ class Temperature(HaloDatabaseInstanceModel):
     def get(id):
         return Temperature.query.get(id)
 
-
     @staticmethod
     def set(id, relationship):
         temperature = Temperature.query.get(id)
@@ -454,6 +461,7 @@ class Temperature(HaloDatabaseInstanceModel):
         temperature = Temperature.query.get(id)
         DatabaseInstance.get().session().delete(temperature)
         DatabaseInstance.get().session().commit()
+
 
 class User(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user')
@@ -472,16 +480,34 @@ class User(HaloDatabaseInstanceModel):
         return User.query.get(id)
 
     @staticmethod
+    def get_by_uid(uid: str):
+        return DatabaseInstance.get().session().query(User).filter(User.uid == uid).first()
+
+        # return User.query.filter(User.uid == uid).first()
+
+    @staticmethod
+    def get_by_email(email: str):
+        return User.query.filter(User.email == email).first()
+
+    @staticmethod
     def set(id, name):
         user = User.query.get(id)
         user.name = name
-        DatabaseInstance.get().session().commit()
+        session = DatabaseInstance.get().session()
+        session.commit()
 
     @staticmethod
-    def delete(id):
+    def delete(user_id):
         user = User.query.get(id)
-        DatabaseInstance.get().session().delete(user)
-        DatabaseInstance.get().session().commit()
+        session = DatabaseInstance.get().session()
+        session.delete(user)
+        session.commit()
+
+    @staticmethod
+    def save(user):
+        session = DatabaseInstance.get().session()
+        session.add(user)
+        session.commit()
 
 
 class UserExperiment(HaloDatabaseInstanceModel):

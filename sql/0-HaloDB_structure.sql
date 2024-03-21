@@ -28,7 +28,7 @@ CREATE TABLE `author` (
   `id` int NOT NULL AUTO_INCREMENT,
   `author` varchar(80) COLLATE utf8mb3_bin DEFAULT NULL,
   `sample_id` int NOT NULL,
-  `user_id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
   `corresponding_author` tinyint DEFAULT NULL,
   `email` varchar(256) COLLATE utf8mb3_bin DEFAULT NULL,
   PRIMARY KEY (`id`,`sample_id`),
@@ -336,7 +336,8 @@ CREATE TABLE `sample` (
   KEY `fk_samples_target1_idx` (`target`),
   KEY `fk_sample_method1_idx` (`method`),
   CONSTRAINT `fk_sample_method1` FOREIGN KEY (`method`) REFERENCES `method` (`id`),
-  CONSTRAINT `fk_samples_experiments1` FOREIGN KEY (`experiment_id`) REFERENCES `experiment` (`id`),
+  CONSTRAINT `fk_sample_user1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+  CONSTRAINT `fk_samples_experiments1` FOREIGN KEY (`experiment_id`) REFERENCES `experiment` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_samples_fraction1` FOREIGN KEY (`sfrac`) REFERENCES `fraction` (`id`),
   CONSTRAINT `fk_samples_oxygen1` FOREIGN KEY (`orel`) REFERENCES `oxygen` (`id`),
   CONSTRAINT `fk_samples_ph1` FOREIGN KEY (`phca`) REFERENCES `ph` (`id`),
@@ -481,8 +482,8 @@ CREATE TABLE `user_shared_sample` (
   PRIMARY KEY (`user_id`,`sample_id`),
   KEY `fk_users_has_samples_samples1_idx` (`sample_id`),
   KEY `fk_users_has_samples_users1_idx` (`user_id`),
-  CONSTRAINT `fk_user_shared_sample_user1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
-  CONSTRAINT `fk_users_has_samples_samples1` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`)
+  CONSTRAINT `fk_user_shared_sample_user1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_users_has_samples_samples1` FOREIGN KEY (`sample_id`) REFERENCES `sample` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -495,4 +496,4 @@ CREATE TABLE `user_shared_sample` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-03-16 19:26:20
+-- Dump completed on 2024-03-21 20:30:33
