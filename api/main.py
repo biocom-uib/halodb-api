@@ -185,14 +185,14 @@ def user_edit(params: dict, uid: Optional[str] = None, **kwargs):
                     status=result_status,
                     mimetype="application/json")
 
-
 @app.route('/upload/sample/', methods=['POST'])
 @wrap_error
 @limiter.limit("100/minute")
-# @get_params
+@get_params
 @log_params
 # @required_token
-def upload_sample():
+def upload_sample(params: dict, **kwargs):
+    # TODO: handle the json received
     log.info('Request received for uploading a sample')
     return jsonify({"message": "OK"})
 
@@ -201,7 +201,7 @@ def upload_sample():
 @wrap_error
 @limiter.limit("100/minute")
 # @get_params
-@log_params
+# @log_params
 # @required_token
 def get_sample_list():
     log.info('Request received for list of samples')
@@ -223,13 +223,13 @@ def get_sample_list():
     return Response(json.dumps(samples), mimetype="application/json")
 
 
-@app.route('/query/sample/<id>/', methods=['GET'])
+@app.route('/query/sample/<id_sample>/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
 # @get_params
-@log_params
+# @log_params
 # @required_token
-def get_sample(params: dict, id_sample: Optional[str] = None, **kwargs):
+def get_sample(id_sample: str):
     log.info(f'Requested sample with {id_sample = }')
     return send_from_directory(app.config['static_folder'], mocked_sample_file)
 
@@ -238,7 +238,7 @@ def get_sample(params: dict, id_sample: Optional[str] = None, **kwargs):
 @wrap_error
 @limiter.limit("100/minute")
 # @get_params
-@log_params
+# @log_params
 # @required_token
 def get_classification_data(table: str, value: float):
     if table == 'temperature':
@@ -253,14 +253,14 @@ def get_classification_data(table: str, value: float):
         value = element.category
     else:
         value = None
-    return value
+    return jsonify(value)
 
 
 @app.route('/query/<string:table>/')
 @wrap_error
 @limiter.limit("100/minute")
 # @get_params
-@log_params
+# @log_params
 # @required_token
 def get_table_data(table: str):
     o2 = db.session().query(db.get_table(table)).all()
