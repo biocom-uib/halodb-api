@@ -10,7 +10,6 @@ from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from sqlalchemy import DateTime, func
 
 from api import log
 from api.auth import required_token
