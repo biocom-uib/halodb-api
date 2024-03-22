@@ -192,6 +192,7 @@ def user_edit(params: dict, uid: Optional[str] = None, **kwargs):
 @log_params
 # @required_token
 def upload_sample(params: dict, **kwargs):
+    # TODO: handle the json received
     log.info('Request received for uploading a sample')
     return jsonify({"message": "OK"})
 
