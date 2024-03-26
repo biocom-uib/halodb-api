@@ -1,5 +1,18 @@
 version: "3.3"
 services:
+  app:
+    build:
+      context: .
+      target: base
+    environment:
+      APP_ENV: development
+      MYSQL_PASSWORD: halodb
+    volumes:
+      - ./api:/opt/halodb-api/api:ro
+
   db:
+    environment:
+      MYSQL_PASSWORD: halodb
+      MYSQL_ROOT_PASSWORD: root
     volumes:
       - ./volumes/mysql_data:/var/lib/mysql
