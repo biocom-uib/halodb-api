@@ -11,11 +11,17 @@ class HaloDatabaseInstanceModel(db.Base):
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
+    def from_dict(self, data):
+        for field in data:
+            if field in self.__table__.columns:
+                setattr(self, field, data[field])
+
 
 class Author(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('author')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -55,7 +61,8 @@ class Author(HaloDatabaseInstanceModel):
 class Experiment(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('experiment')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -84,7 +91,8 @@ class Experiment(HaloDatabaseInstanceModel):
 class Fraction(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('fraction')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -113,7 +121,8 @@ class Fraction(HaloDatabaseInstanceModel):
 class Group(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('group')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__()
         self.name = name
 
     def __repr__(self):
@@ -142,7 +151,8 @@ class Group(HaloDatabaseInstanceModel):
 class GroupSharingSample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('group_sharing_sample')
 
-    def __init__(self, group_id, sample_id):
+    def __init__(self, group_id, sample_id, **kw: any):
+        super().__init__(**kw)
         self.group_id = group_id
         self.sample_id = sample_id
 
@@ -173,7 +183,8 @@ class GroupSharingSample(HaloDatabaseInstanceModel):
 class Keywords(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('keywords')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -202,7 +213,8 @@ class Keywords(HaloDatabaseInstanceModel):
 class Method(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('method')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -233,7 +245,8 @@ class Oxygen(HaloDatabaseInstanceModel):
     # id = Column(Integer, primary_key=True)
     # relationship = Column(String(40), nullable=False)
 
-    def __init__(self, relationship):
+    def __init__(self, relationship, **kw: any):
+        super().__init__(**kw)
         self.relationship = relationship
 
     def __repr__(self):
@@ -262,7 +275,8 @@ class Oxygen(HaloDatabaseInstanceModel):
 class Ph(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('ph')
 
-    def __init__(self, relationship):
+    def __init__(self, relationship, **kw: any):
+        super().__init__(**kw)
         self.relationship = relationship
 
     def __repr__(self):
@@ -291,7 +305,8 @@ class Ph(HaloDatabaseInstanceModel):
 class Project(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('project')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -320,7 +335,8 @@ class Project(HaloDatabaseInstanceModel):
 class Salinity(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('salinity')
 
-    def __init__(self, relationship):
+    def __init__(self, relationship, **kw: any):
+        super().__init__(**kw)
         self.relationship = relationship
 
     def __repr__(self):
@@ -343,7 +359,8 @@ class Salinity(HaloDatabaseInstanceModel):
 class Sample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('sample')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -377,7 +394,8 @@ class Sample(HaloDatabaseInstanceModel):
 class SampleHasKeywords(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('sample_has_keywords')
 
-    def __init__(self, sample_id, keywords_id):
+    def __init__(self, sample_id, keywords_id, **kw: any):
+        super().__init__(**kw)
         self.sample_id = sample_id
         self.keywords_id = keywords_id
 
@@ -408,7 +426,8 @@ class SampleHasKeywords(HaloDatabaseInstanceModel):
 class Target(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('target')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -437,7 +456,8 @@ class Target(HaloDatabaseInstanceModel):
 class Temperature(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('temperature')
 
-    def __init__(self, relationship):
+    def __init__(self, relationship, **kw: any):
+        super().__init__(**kw)
         self.relationship = relationship
 
     def __repr__(self):
@@ -466,7 +486,8 @@ class Temperature(HaloDatabaseInstanceModel):
 class User(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user')
 
-    def __init__(self, name):
+    def __init__(self, name, **kw: any):
+        super().__init__(**kw)
         self.name = name
 
     def __repr__(self):
@@ -481,9 +502,8 @@ class User(HaloDatabaseInstanceModel):
 
     @staticmethod
     def get_by_uid(uid: str):
-        return DatabaseInstance.get().session().query(User).filter(User.uid == uid).first()
-
-        # return User.query.filter(User.uid == uid).first()
+        return User.query.filter(User.uid == uid).first()
+        # return DatabaseInstance.get().session().query(User).filter(User.uid == uid).first()
 
     @staticmethod
     def get_by_email(email: str):
@@ -513,7 +533,8 @@ class User(HaloDatabaseInstanceModel):
 class UserExperiment(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_experiment')
 
-    def __init__(self, user_id, experiment_id):
+    def __init__(self, user_id, experiment_id, **kw: any):
+        super().__init__(**kw)
         self.user_id = user_id
         self.experiment_id = experiment_id
 
@@ -544,9 +565,11 @@ class UserExperiment(HaloDatabaseInstanceModel):
 class UserHasGroup(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_has_group')
 
-    def __init__(self, user_id, group_id):
+    def __init__(self, user_id, group_id, relation, **kw: any):
+        super().__init__(**kw)
         self.user_id = user_id
         self.group_id = group_id
+        self.relation = relation
 
     def __repr__(self):
         return f'<UserHasGroup {self.user_id} {self.group_id}>'
@@ -556,7 +579,7 @@ class UserHasGroup(HaloDatabaseInstanceModel):
 
     @staticmethod
     def get(user_id, group_id):
-        return UserHasGroup.query.get((user_id, group_id))
+        return UserHasGroup.query.get(user_id=user_id, group_id=group_id)
 
     @staticmethod
     def set(user_id, group_id):
@@ -576,6 +599,7 @@ class UserProject(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_project')
 
     def __init__(self, user_id, project_id):
+        super().__init__(**kw)
         self.user_id = user_id
         self.project_id = project_id
 
@@ -606,7 +630,8 @@ class UserProject(HaloDatabaseInstanceModel):
 class UserSharedSample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_shared_sample')
 
-    def __init__(self, user_id, sample_id):
+    def __init__(self, user_id, sample_id, **kw: any):
+        super().__init__(**kw)
         self.user_id = user_id
         self.sample_id = sample_id
 
