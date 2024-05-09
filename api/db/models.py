@@ -598,7 +598,7 @@ class UserHasGroup(HaloDatabaseInstanceModel):
 class UserProject(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_project')
 
-    def __init__(self, user_id, project_id):
+    def __init__(self, user_id, project_id, **kw:any):
         super().__init__(**kw)
         self.user_id = user_id
         self.project_id = project_id
