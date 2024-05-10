@@ -31,6 +31,3 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE', 'halodb')
 
 MYSQL_USER = os.getenv('MYSQL_USER_NAME', 'halodb')
 MYSQL_PASSWORD = get_secret('MYSQL_PASSWORD', 'MYSQL_PASSWORD_FILE', 'halodb')
-
-# DATABASE_HOST = os.getenv('DATABASE_HOST', 'localhost')
-# DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD', 'halodb')
