@@ -1,13 +1,16 @@
 version: "3.3"
 services:
   app:
-    build: .
     links:
       - db
     ports:
       - "5000:5000"
     depends_on:
       - db
+    environment:
+      MYSQL_DATABASE: halodb
+      MYSQL_USER: halodb
+      MYSQL_PORT: 3306
     volumes:
       - ./volumes/logs:/var/log
 
@@ -16,8 +19,6 @@ services:
     environment:
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
-      MYSQL_PASSWORD: halodb
-      MYSQL_ROOT_PASSWORD: root
       MYSQL_PORT: 3306
     user: '1021:1002'
     volumes:

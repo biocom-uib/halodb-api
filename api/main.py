@@ -71,6 +71,7 @@ def serialize_datetime(obj):
     return obj
     # raise TypeError("Type not serializable")
 
+
 @app.route('/users/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
@@ -98,17 +99,15 @@ def users(params: dict, **kwargs):
 @log_params
 # @required_token
 def add_user(params: dict, **kwargs):
-
     log.info('Request received for creating a new user')
 
-    request_form = json.loads(params)
     new_user = User('')
-    new_user.email = request_form['email']
-    new_user.name = request_form['name']
-    new_user.surname = request_form['surname']
-    new_user.uid = request_form['uid']
-    if 'password' in request_form:
-        new_user.password = request_form['password']
+    new_user.email = params['email']
+    new_user.name = params['name']
+    new_user.surname = params['surname']
+    new_user.uid = params['uid']
+    if 'password' in params:
+        new_user.password = params['password']
     else:
         new_user.password = ""
 
@@ -177,7 +176,6 @@ def user_handle(params: dict, **kwargs):
 @log_params
 # @required_token
 def user_edit(params: dict, **kwargs):
-
     uid: str = kwargs['uid']
 
     log.info(f'PUT/PATCH request received for user {uid = } with {params = }')
@@ -255,7 +253,7 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
 @get_params
 @log_params
 @required_token
-def create_experiment(params: dict, project_id:any, **kwargs):
+def create_experiment(params: dict, project_id: any, **kwargs):
     message = ''
     result_status = 200
 
@@ -270,7 +268,7 @@ def create_experiment(params: dict, project_id:any, **kwargs):
     elif request.method == 'POST':
         log.info(f'Request received for creating a new experiment for {user_id =} and {project_id =}')
         try:
-            new_experiment = ExperimentController.create_experiment(params)
+            new_experiment = ExperimentController.create_experiment(params, user_id)
             new_experiment.project_id = project_id
             new_experiment.user_id = user_id
 
@@ -494,7 +492,7 @@ def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
 
     if request.method == 'GET':
         log.info(f'GET request received for experiments in project {id = } with {params = }')
-        experiments = ExperimentController.get_by_project(id)
+        experiments = ExperimentController.get_by_project(id, params['project_id'])
         message = [exp.as_dict() for exp in experiments]
         result_status = 200
 
@@ -759,3 +757,4 @@ def get_table_list(table: str):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
+
