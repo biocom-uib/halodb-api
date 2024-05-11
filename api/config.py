@@ -1,6 +1,7 @@
 import os
 from typing import Optional
 
+
 def get_secret(var: str, file_var: str, default: Optional[str]) -> Optional[str]:
     """
     try os.getenv(var) first, otherwise read from os.getenv(file_var)

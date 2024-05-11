@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from api.db.db import DatabaseInstance
 from api.db.models import User, Sample, Author
@@ -43,35 +42,44 @@ class UserController:
         return User.get_by_email(email)
 
     @classmethod
-    def create_user(cls, data: dict):
+    def create_user(cls, params: dict):
         """
         Method to create a user in the database. A new user has to have an uid and an email that are unique.
-        :param data: the data to be used to create the user.
+        :param params: the user data to be used.
         :return: the user data, with the automatic fields updated.
         """
-        user_to_create = User('')
-        user_to_create.from_dict(data)
+        new_user = User('')
+        new_user.email = params['email']
+        new_user.name = params['name']
+        new_user.surname = params['surname']
+        new_user.uid = params['uid']
+        if 'password' in params:
+            new_user.password = params['password']
+        else:
+            new_user.password = ""
+
         with DatabaseInstance().session() as session:
             try:
                 # Check if the uid is already in use. The uid has to be unique,
                 # so no two users can have the same uid
-                stmt = select(User).filter_by(uid=user_to_create.uid)
+                stmt = select(User).filter_by(uid=new_user.uid)
                 test = session.execute(stmt).first()
                 if test is not None:
-                    raise Exception(f'The uid "{user_to_create.uid}" is already in use')
+                    raise Exception(f'The uid "{new_user.uid}" is already in use')
 
                 # Check if the email is already in use. The email has to be unique,
                 # so no two users can have the same email
-                stmt = select(User).filter_by(email=user_to_create.email)
+                stmt = select(User).filter_by(email=new_user.email)
                 test = session.execute(stmt).first()
                 if test is not None:
-                    raise Exception(f'The email "{user_to_create.email}" is already in use')
+                    raise Exception(f'The email "{new_user.email}" is already in use')
 
-                session.add(user_to_create)
+                session.add(new_user)
                 session.commit()
 
-                stmt = select(User).filter_by(uid=user_to_create.uid)
-                user_created = session.execute(stmt).first()[0]
+                stmt = select(User).filter_by(uid=new_user.uid)
+                user_created = session.execute(stmt).first()
+                user_created = user_created[0]
             except Exception as e:
                 session.rollback()
                 raise e
