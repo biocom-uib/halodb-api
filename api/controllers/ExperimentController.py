@@ -60,7 +60,7 @@ class ExperimentController:
     def get_by_project(cls, user_id: int, project_id: int):
         """
         Get the list of experiments that belong to a project.
-        :param user_id: the supposed member of the project
+        :param user_id: the supposed member of the project.
         :param project_id: the project identification.
         :return: the experiments that belong to the project (can be None).
         """

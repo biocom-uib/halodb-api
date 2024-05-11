@@ -4,8 +4,10 @@ from typing import Self, Optional
 import MySQLdb
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
+# from sqlalchemy.ext.automap import automap_base
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import declarative_base
+
 from sqlalchemy.orm import sessionmaker
 
 from api import config, log
@@ -20,15 +22,16 @@ SQLALCHEMY_DATABASE_URI = (f"mysql://{DATABASE_USERNAME}:{DATABASE_PASSWORD}"
                            f"@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
 
 Base = declarative_base()
+# Base = automap_base()
 
 
 class DatabaseInstance:
     _instance = None
 
     def __init__(self):
-        self.db = SQLAlchemy(model_class=Base)
         self.engine = create_engine(SQLALCHEMY_DATABASE_URI)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.db = SQLAlchemy(model_class=Base)
         self.db.metadata.reflect(self.engine)
 
     def init_app(self, app):

@@ -101,18 +101,8 @@ def users(params: dict, **kwargs):
 def add_user(params: dict, **kwargs):
     log.info('Request received for creating a new user')
 
-    new_user = User('')
-    new_user.email = params['email']
-    new_user.name = params['name']
-    new_user.surname = params['surname']
-    new_user.uid = params['uid']
-    if 'password' in params:
-        new_user.password = params['password']
-    else:
-        new_user.password = ""
-
     try:
-        UserController.create_user(new_user)
+        new_user = UserController.create_user(params)
         message = {'status': 'success',
                    'message': 'User created',
                    'user': new_user.as_dict()
