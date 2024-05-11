@@ -37,4 +37,4 @@ FROM base as production
 
 COPY --chown=halodb:biocom api /opt/halodb-api/api
 
-CMD exec gunicorn --bind=:5000 --workers=4 --threads=16 --timeout=0 --log-level=INFO api.main:app
+CMD exec gunicorn --bind=:5000 --workers=4 --threads=16 --timeout=0 --log-level=INFO --log-file=/var/log/halodb-api/app.log api.main:app
