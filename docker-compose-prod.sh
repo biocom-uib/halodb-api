@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd "$(dirname "$(basename "$0")")"
+cd "$(dirname "$0")"
 
-docker-compose -f docker-compose.yml -f production.yml "$@"
+docker compose -f docker-compose.yml -f production.yml "$@"

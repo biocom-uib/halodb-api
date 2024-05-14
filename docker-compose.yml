@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   app:
     links:
@@ -11,8 +10,6 @@ services:
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
       MYSQL_PORT: 3306
-    volumes:
-      - ./volumes/logs:/var/log/halodb-api
 
   db:
     image: mysql:8.0

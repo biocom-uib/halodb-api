@@ -30,11 +30,19 @@ USER halodb
 
 EXPOSE 5000
 
-CMD exec gunicorn --reload --bind=:5000 --workers=1 --threads=2 --timeout=0 --log-level=DEBUG api.main:app
+CMD exec gunicorn --reload \
+  --bind=:5000 --workers=1 --threads=2 --timeout=0 \
+  --access-logfile=- \
+  --error-logfile=- --log-level=DEBUG \
+  api.main:app
 
 
 FROM base as production
 
 COPY --chown=halodb:biocom api /opt/halodb-api/api
 
-CMD exec gunicorn --bind=:5000 --workers=4 --threads=16 --timeout=0 --log-level=INFO --log-file=/var/log/halodb-api/app.log api.main:app
+CMD exec gunicorn \
+  --bind=:5000 --workers=4 --threads=16 --timeout=0 \
+  --access-logfile=/var/log/halodb-api/access.log \
+  --error-logfile=/var/log/halodb-api/error.log --log-level=INFO \
+  api.main:app

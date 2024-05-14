@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   app:
     build:
@@ -9,6 +8,8 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/mysql_halodb_password
     secrets:
       - mysql_halodb_password
+    volumes:
+      - /data/shared/halodb/logs:/var/log/halodb-api
 
   db:
     volumes:
