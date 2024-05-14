@@ -9,7 +9,9 @@ services:
     secrets:
       - mysql_halodb_password
     volumes:
+      - /data/shared/halodb/uploads:/opt/halodb-api/uploads
       - /data/shared/halodb/logs:/var/log/halodb-api
+      - /data/shared/halodb/tmp:/opt/halodb-api/tmp
 
   db:
     volumes:

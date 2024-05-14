@@ -10,6 +10,8 @@ services:
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
       MYSQL_PORT: 3306
+      TMPDIR: /opt/halodb-api/tmp
+      UPLOADS_DIR: /opt/halodb-api/uploads
 
   db:
     image: mysql:8.0

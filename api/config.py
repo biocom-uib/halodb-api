@@ -25,6 +25,8 @@ def get_secret(var: str, file_var: str, default: Optional[str]) -> Optional[str]
 
 
 APP_ENV = os.getenv('APP_ENV', 'development')
+UPLOADS_DIR = os.getenv('UPLOADS_DIR')
+
 MYSQL_HOST = os.getenv('MYSQL_HOST', 'db')
 
 MYSQL_PORT = int(os.getenv('MYSQL_PORT', 3306))

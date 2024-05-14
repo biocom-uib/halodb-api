@@ -8,6 +8,8 @@ services:
       MYSQL_PASSWORD: halodb
     volumes:
       - ./api:/opt/halodb-api/api:ro
+      - ./volumes/tmp:/opt/halodb-api/tmp
+      - ./volumes/uploads:/opt/halodb-api/uploads
 
   db:
     environment:

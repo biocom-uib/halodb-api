@@ -5,14 +5,17 @@ import random
 
 from typing import Optional
 
-from flask import Flask, Response, send_from_directory, jsonify, request
+from flask import Flask, Response, make_response, send_from_directory, jsonify, request
 from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
+from werkzeug.utils import secure_filename
+
 from api import log
 from api.auth import required_token
+from api.config import UPLOADS_DIR
 
 from api.decorators import wrap_error, get_params, log_params
 
@@ -494,16 +497,34 @@ def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
 # ##############################################################
 # Sample handling
 # ##############################################################
-@app.route('/upload/sample/', methods=['POST'])
+@app.route('/upload/test/', methods=['POST'])
 @wrap_error
 @limiter.limit("100/minute")
-@get_params
-@log_params
 # @required_token
-def upload_sample(params: dict, **kwargs):
-    # TODO: handle the json received
+def upload_test():
     log.info('Request received for uploading a sample')
-    return jsonify({"message": "OK"})
+
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        return make_response(({
+            'status': 'error',
+            'message': 'the request does not contain a file'
+        }, 400))
+
+    file = request.files['file']
+
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
+    if file.filename == '':
+        return make_response(({
+            'status': 'error',
+            'message': 'file was not selected'
+        }, 400))
+
+    filename = secure_filename(file.filename)
+    log.info(f'Secured filename: {filename}')
+    # file.save(os.path.join(UPLOADS_DIR, filename))
+    return make_response({ 'status': 'success' })
 
 
 @app.route('/query/sample_list/', methods=['GET'])
