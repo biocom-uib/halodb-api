@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      target: production
+    environment:
+      APP_ENV: production
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_halodb_password
+    secrets:
+      - mysql_halodb_password
+    volumes:
+      - /data/shared/halodb/uploads:/opt/halodb-api/uploads
+      - /data/shared/halodb/logs:/var/log/halodb-api
+      - /data/shared/halodb/tmp:/opt/halodb-api/tmp
+
+  db:
+    volumes:
+      - /data/shared/halodb/mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_halodb_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+    secrets:
+      - mysql_halodb_password
+      - mysql_root_password
+
+secrets:
+  mysql_halodb_password:
+    file: secrets/mysql_halodb_password.txt
+  mysql_root_password:
+    file: secrets/mysql_root_password.txt

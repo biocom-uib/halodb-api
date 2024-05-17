@@ -71,7 +71,12 @@ class DatabaseInstance:
                             DatabaseInstance._instance = instance
                             return instance
             except MySQLdb.OperationalError as e:
-                log.exception(e)
+                (code, message) = e.args
+
+                if code == 2002: # CR_CONNECTION_ERROR
+                    log.info(f'Could not connect to the DB ({message}). Waiting...')
+                else:
+                    raise
 
             time.sleep(wait_time)
             attempts -= 1

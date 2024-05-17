@@ -5,11 +5,12 @@ import random
 
 from typing import Optional
 
-from flask import Flask, Response, send_from_directory, jsonify, request
+from flask import Flask, Response, send_from_directory, jsonify, request, make_response
 from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from werkzeug.utils import secure_filename
 
 from api import log
 from api.auth import required_token
@@ -584,6 +585,33 @@ def upload_sample_file(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@required_token
+def upload_test():
+    log.info('Request received for uploading a sample')
+
+    # check if the post request has the file part
+    if 'file' not in request.files:
+        return make_response(({
+                                  'status': 'error',
+                                  'message': 'the request does not contain a file'
+                              }, 400))
+
+    file = request.files['file']
+
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
+    if file.filename == '':
+        return make_response(({
+                                  'status': 'error',
+                                  'message': 'file was not selected'
+                              }, 400))
+
+    filename = secure_filename(file.filename)
+    log.info(f'Secured filename: {filename}')
+    # file.save(os.path.join(UPLOADS_DIR, filename))
+    return make_response({'status': 'success'})
+
+
 @app.route('/query/sample_list/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
@@ -825,4 +853,3 @@ def get_table_list(table: str):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
-
