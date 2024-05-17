@@ -5,6 +5,7 @@ USE `halodb` ;
 insert into method(description) values
 ("BUSCO"),
 ("CheckM"),
+("CheckV"),
 ("OrthoDB"),
 ("Kraken"),
 ("BlobTools"),
@@ -101,3 +102,72 @@ insert into target (name) values
 ("tRNA (Transfer RNA)"),
 ("ncRNA (Non-coding RNA)"),
 ("RNA (total RNA)");
+
+
+insert into binning(name) values
+("MetaBAT"),
+("MaxBin"),
+("CONCOCT"),
+("Binsanity"),
+("MyCC"),
+("Cocacola"),
+("Anvi'o"),
+("Metagenome-Atlas"),
+("CheckM"),
+("DAS Tool");
+
+
+insert into sequencing(name) values
+("FastQC"),
+("Trimmomatic"),
+("Cutadapt"),
+("SPAdes"),
+("MEGAHIT"),
+("IDBA-UD"),
+("BWA"),
+("Bowtie2"),
+("HISAT2"),
+("GATK"),
+("FreeBayes"),
+("Samtools"),
+("Prokka"),
+("InterProScan"),
+("EggNOG-mapper"),
+("MetaPhlAn"),
+("Kraken2"),
+("MetaGeneMark");
+
+
+insert into extraction(name) values
+("LabKey"),
+("Biotracker"),
+("Benchling"),
+("OpenLab"),
+("LabArchives"),
+("Protocols.io"),
+("Quartzy"),
+("NanoDrop"),
+("Qubit"),
+("Bioanalyzer"),
+("Hamilton Robotics"),
+("Tecan");
+
+
+insert into assembly(name) values
+("SPAdes"),
+("Velvet"),
+("ABySS"),
+("Canu"),
+("Flye"),
+("Shasta"),
+("MaSuRCA"),
+("HybridSPAdes"),
+("MEGAHIT"),
+("IDBA-UD"),
+("MetaSPAdes"),
+("Trinity"),
+("Oases"),
+("SOAPdenovo"),
+("NOVOPlasty"),
+("Unicycler");
+
