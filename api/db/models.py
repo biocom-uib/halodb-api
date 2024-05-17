@@ -1,3 +1,7 @@
+import datetime
+
+import uuid
+
 from api.db import db
 from api.db.db import DatabaseInstance
 
@@ -359,19 +363,57 @@ class Salinity(HaloDatabaseInstanceModel):
 class Sample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('sample')
 
-    def __init__(self, name, **kw: any):
+    def __init__(self, **kw: any):
         super().__init__(**kw)
-        self.name = name
 
     def __repr__(self):
-        return f'<Sample {self.name}>'
+        return f'<Sample {self.id}>'
 
     def __str__(self):
-        return f'<Sample {self.name}>'
+        return f'<Sample {self.id}>'
+
+    __file_fields__ = {
+        "rreads": "rrname",
+        "treads": "trname",
+        "assembled": "assname",
+        "pgenes": "pgenesname"
+                   }
+
+    @classmethod
+    def is_file_field(cls, field):
+        return field in cls.__file_fields__.keys()
+
+    @classmethod
+    def get_file_name_field(cls, field):
+        if cls.is_file_field(field):
+            return cls.__file_fields__[field]
+        return None
+
+    def exclude_files(self):
+        return {k: v for k, v in self.as_dict().items()
+                if k not in self.__file_fields__.keys() and k not in self.__file_fields__.values()}
+
+    @classmethod
+    def valid_field(cls, field):
+        return field in cls.__table__.columns
 
     @staticmethod
     def get(id):
         return Sample.query.get(id)
+
+    def add_file(self, field, data, filename_field, filename):
+        if not self.is_file_field(field):
+            raise Exception("The field is not a file")
+
+        uuid_file = getattr(self, field)
+        if uuid_file is None:
+            uuid_file = uuid.uuid4()
+            setattr(self, field, uuid_file)
+
+        setattr(self, filename_field, filename)
+        setattr(self, "updated", datetime.datetime.now())
+
+        # TODO store the data received in the file system
 
     @staticmethod
     def set(id, name):

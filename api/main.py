@@ -44,7 +44,7 @@ else:
     log.error('The database could not be initialized')
 
 # This has to be imported here
-from api.db.models import Temperature, Ph, Salinity, User
+from api.db.models import Temperature, Ph, Salinity, User, Sample
 
 from api.controllers.UserController import UserController
 from api.controllers.GroupController import GroupController
@@ -499,11 +499,89 @@ def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
 @limiter.limit("100/minute")
 @get_params
 @log_params
-# @required_token
+@required_token
 def upload_sample(params: dict, **kwargs):
-    # TODO: handle the json received
     log.info('Request received for uploading a sample')
-    return jsonify({"message": "OK"})
+    uid: str = kwargs['uid']
+    user_id = UserController.get_user_by_uid(uid).id
+
+    # The owner is the current user
+    params['user_id'] = user_id
+
+    # the creation a update date are the same, the sample is new.
+    now = datetime.datetime.now()
+    params['created'] = now
+    params['updated'] = now
+
+    # no sample id has to be provided, the sample is new. Make sure the id is not in the params list
+    params.pop('id')
+
+    invalid = [fld for fld in params if not Sample.valid_field(fld)]
+    if len(invalid) == 0:
+        try:
+            sample_created = SampleController.create_sample(params)
+            message = {'status': 'success',
+                       'message': 'Sample created',
+                       'sample': sample_created.as_dict()
+                       }
+            result_status = 200
+        except Exception as e:
+            message = {'status': 'error',
+                       'message': str(e)
+                       }
+            result_status = 400
+    else:
+        message = {'status': 'error',
+                   'message': 'wrong field names',
+                   'fields': invalid}
+        result_status = 400
+
+    return Response(response=json.dumps(message, default=str),
+                    status=result_status,
+                    mimetype="application/json")
+
+
+@app.route('/upload/sample/<id>/<input_type>/', methods=['POST'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def upload_sample_file(params: dict, **kwargs):
+    log.info('Request received for uploading a sample file')
+    try:
+        uid: str = kwargs['uid']
+        user_id = UserController.get_user_by_uid(uid).id
+        if 'sampleId' not in params:
+            raise Exception('Sample id not provided')
+        if 'input_type' not in params:
+            raise Exception('Input type not provided')
+
+        input_type = params['input_type']
+        filename = params['filename']
+        sampleId = params['sampleId']
+
+        sample: Sample = SampleController.get_sample_by_id(sampleId)
+        if sample is None:
+            raise Exception(f'Sample with id {sampleId} not found')
+
+        if sample.user_id != user_id:
+            raise Exception(f'User {user_id} is not the owner of the sample {sampleId}')
+
+        SampleController.update_file(sampleId, input_type, filename, request.data)
+        message = {'status': 'success',
+                   'message': f'file for {input_type} ({filename}) added to sample'
+                   }
+        result_status = 200
+    except Exception as e:
+        message = {'status': 'error',
+                   'message': str(e)
+                   }
+        result_status = 400
+
+    return Response(response=json.dumps(message, default=str),
+                    status=result_status,
+                    mimetype="application/json")
 
 
 @app.route('/query/sample_list/', methods=['GET'])
