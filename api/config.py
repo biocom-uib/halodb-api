@@ -23,7 +23,6 @@ def get_secret(var: str, file_var: str, default: Optional[str]) -> Optional[str]
 
     return default
 
-
 APP_ENV = os.getenv('APP_ENV', 'development')
 MYSQL_HOST = os.getenv('MYSQL_HOST', 'db')
 

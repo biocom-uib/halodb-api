@@ -406,6 +406,7 @@ class Sample(HaloDatabaseInstanceModel):
     def get_file_data(self, field):
         if not Sample.is_file_field(field):
             raise Exception("The field is not a file")
+
         filedata = getattr(self, field)
         filename = getattr(self, Sample.get_file_name_field(field))
 

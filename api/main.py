@@ -573,7 +573,6 @@ def get_sample_file(params: dict, sampleId: Optional[int] = None, input_type: Op
 def upload_sample_file(sampleId: int, input_type: str):
     log.info('Request received for uploading a sample file')
     try:
-
         if 'file' not in request.files:
             abort(401, "No file provided")
         file = request.files['file']

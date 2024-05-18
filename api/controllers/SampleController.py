@@ -75,7 +75,9 @@ class SampleController:
                 if sample is None:
                     raise Exception("Sample not found")
                 sample_to_edit = sample[0]
+
                 sample_to_edit.add_file(file_id, file_data, filename_field, file_name)
+
                 session.commit()
             except Exception as e:
                 session.rollback()
