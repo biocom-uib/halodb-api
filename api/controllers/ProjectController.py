@@ -44,8 +44,8 @@ class ProjectController:
         with DatabaseInstance().session() as session:
             stmt = select(Project.id, Project.name, Project.description).join(UserProject).where(UserProject.user_id == user_id)
             projects = session.execute(stmt).all()
-            # session.close()
-            return projects
+
+        return projects
 
     @classmethod
     def get_project_by_id(cls, project_id: int):
@@ -58,8 +58,8 @@ class ProjectController:
         # with DatabaseInstance().session() as session:
         #     stmt = select(Project).filter_by(id=project_id)
         #     project = session.execute(stmt).first()
-        #     session.close()
-        #     return project
+        #
+        # return project
 
     @classmethod
     def create_project(cls, data: dict):
@@ -85,8 +85,6 @@ class ProjectController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
             return project_created
 
     @classmethod
@@ -112,8 +110,6 @@ class ProjectController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
 
     @classmethod
     def delete_project(cls, project_id: int):
@@ -145,5 +141,3 @@ class ProjectController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()

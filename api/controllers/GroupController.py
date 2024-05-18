@@ -46,15 +46,15 @@ class GroupController:
                           Group.id, Group.name, Group.description).join_from(Group, UserHasGroup).where(
                 UserHasGroup.user_id == user_id)
             groups = session.execute(stmt).all()
-            session.close()
-            return groups
+
+        return groups
 
         # return Group.query.filter(Group.users.any(id=user_id)).all()
         # with DatabaseInstance().session() as session:
         #     stmt = select(Group).filter(Group.users.any(id=user_id))
         #     groups = session.execute(stmt).all()
-        #     session.close()
-        #     return groups
+        #
+        # return groups
 
     @classmethod
     def get_group_by_name(cls, name: str):
@@ -64,10 +64,6 @@ class GroupController:
         :return: the group if it exists, None otherwise.
         """
         return Group.query.filter(Group.name == name).first()
-        # with DatabaseInstance().session() as session:
-        #     group = cls._get_group_by_name(name, session)
-        #     session.close()
-        #     return group
 
     @classmethod
     def get_group_by_id(cls, group_id: int) -> Group:
@@ -77,11 +73,6 @@ class GroupController:
         :return: the group if it exists, None otherwise.
         """
         return Group.query.filter(Group.id == group_id).first()
-        # with DatabaseInstance().session() as session:
-        #     stmt = select(Group).filter_by(id=group_id)
-        #     group = session.execute(stmt).first()[0]
-        #     session.close()
-        #     return group
 
     @classmethod
     def accept_invite(cls, user_id: int, group_id: int, accept: bool):
@@ -113,8 +104,6 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
 
     @classmethod
     def invite(cls, owner_id: int, invited_id: int, group_id: int):
@@ -156,8 +145,6 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
 
     @classmethod
     def create_group(cls, data: dict):
@@ -183,8 +170,7 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
+
             return group_created
 
     @classmethod
@@ -219,8 +205,6 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
 
     @classmethod
     def delete_group(cls, group_id: int):
@@ -249,5 +233,3 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()

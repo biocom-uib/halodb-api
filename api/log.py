@@ -22,6 +22,7 @@ def setup_logger(app, gunicorn: bool):
     if gunicorn:
         gunicorn_logger = logging.getLogger('gunicorn.error')
         _logger.setLevel(gunicorn_logger.level)
+        _logger.handlers = gunicorn_logger.handlers
     else:
         _logger.setLevel(logging.INFO)
 
