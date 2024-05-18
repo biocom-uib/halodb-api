@@ -1,18 +1,17 @@
-version: "3.3"
 services:
   app:
     links:
       - db
     ports:
-      - "5000:5000"
+      - '5000:5000'
     depends_on:
       - db
     environment:
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
       MYSQL_PORT: 3306
-    volumes:
-      - ./volumes/logs:/var/log
+      TMPDIR: /opt/halodb-api/tmp
+      UPLOADS_DIR: /opt/halodb-api/uploads
 
   db:
     image: mysql:8.0
