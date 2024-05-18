@@ -120,3 +120,4 @@ class SampleController:
                 raise e
             finally:
                 session.close()
+                
