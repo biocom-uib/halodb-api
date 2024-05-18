@@ -5,7 +5,8 @@ import random
 
 from typing import Optional
 
-from flask import Flask, Response, send_from_directory, jsonify, request, make_response
+from flask import Flask, Response, send_from_directory, jsonify, request, make_response, abort, send_file
+
 from flask_cors import CORS
 from flask_log_request_id import RequestID
 from flask_limiter import Limiter
@@ -13,7 +14,7 @@ from flask_limiter.util import get_remote_address
 from werkzeug.utils import secure_filename
 
 from api import log
-from api.auth import required_token
+from api.auth import required_token, verify_token
 
 from api.decorators import wrap_error, get_params, log_params
 
@@ -542,34 +543,63 @@ def upload_sample(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@app.route('/upload/sample/<id>/<input_type>/', methods=['POST'])
+@app.route('/query/sample/<id_sample>/<input_type>/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-def upload_sample_file(params: dict, **kwargs):
+def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
+    log.info('Request received for uploading a sample')
+    uid: str = kwargs['uid']
+    user_id = UserController.get_user_by_uid(uid).id
+
+    sample: Sample = SampleController.get_sample_by_id(id_sample)
+    if sample is None:
+        abort(400, f'Sample with id {id_sample} not found')
+
+    if sample.user_id != user_id:
+        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+
+    filename, filedata = sample.get_file_data(input_type)
+    return send_file(filedata, download_name=filename)
+
+
+@app.route('/upload/sample/<id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
+#@wrap_error
+#@limiter.limit("100/minute")
+#@get_params
+#@log_params
+#@required_token
+def upload_sample_file(id_sample: int, input_type: str):
     log.info('Request received for uploading a sample file')
     try:
-        uid: str = kwargs['uid']
+        if 'file' not in request.files:
+            abort(401, "No file provided")
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+
+        # ############################
+        # uid: str = params['uid']
+        # ############################
+        token = request.headers.get('Authorization')
+        if not token:
+            abort(403, 'No token provided')
+        if not token.startswith('Bearer '):
+            abort(403, 'Invalid token type')
+        decoded_token = verify_token(token.split(' ')[1])
+        uid = decoded_token['uid']
+        # ###########################
         user_id = UserController.get_user_by_uid(uid).id
-        if 'sampleId' not in params:
-            raise Exception('Sample id not provided')
-        if 'input_type' not in params:
-            raise Exception('Input type not provided')
 
-        input_type = params['input_type']
-        filename = params['filename']
-        sampleId = params['sampleId']
-
-        sample: Sample = SampleController.get_sample_by_id(sampleId)
+        sample: Sample = SampleController.get_sample_by_id(id_sample)
         if sample is None:
-            raise Exception(f'Sample with id {sampleId} not found')
+            abort(400, f'Sample with id {id_sample} not found')
 
         if sample.user_id != user_id:
-            raise Exception(f'User {user_id} is not the owner of the sample {sampleId}')
+            abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
 
-        SampleController.update_file(sampleId, input_type, filename, request.data)
+        SampleController.update_file(id_sample, input_type, filename, file)
         message = {'status': 'success',
                    'message': f'file for {input_type} ({filename}) added to sample'
                    }

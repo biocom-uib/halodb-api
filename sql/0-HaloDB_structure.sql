@@ -408,7 +408,7 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4;
 
 
--- -----------------------------------------------------
+-- ------------------------------------------------------
 -- Table `halodb`.`group_sharing_sample`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `halodb`.`group_sharing_sample` ;

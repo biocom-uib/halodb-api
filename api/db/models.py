@@ -1,7 +1,9 @@
 import datetime
+import os
 
 import uuid
 
+from api.config import UPLOADS_DIR
 from api.db import db
 from api.db.db import DatabaseInstance
 
@@ -401,7 +403,16 @@ class Sample(HaloDatabaseInstanceModel):
     def get(id):
         return Sample.query.get(id)
 
-    def add_file(self, field, data, filename_field, filename):
+    def get_file_data(self, field):
+        if not Sample.is_file_field(field):
+            raise Exception("The field is not a file")
+
+        filedata = getattr(self, field)
+        filename = getattr(self, Sample.get_file_name_field(field))
+
+        return filename, open(os.path.join(UPLOADS_DIR, filedata), 'rb')
+
+    def add_file(self, field, file_data, filename_field, filename):
         if not self.is_file_field(field):
             raise Exception("The field is not a file")
 
@@ -410,10 +421,10 @@ class Sample(HaloDatabaseInstanceModel):
             uuid_file = uuid.uuid4()
             setattr(self, field, uuid_file)
 
-        setattr(self, filename_field, filename)
+        setattr(self, Sample.get_file_name_field(field), filename)
         setattr(self, "updated", datetime.datetime.now())
+        file_data.save(os.path.join(UPLOADS_DIR, uuid_file))
 
-        # TODO store the data received in the file system
 
     @staticmethod
     def set(id, name):
