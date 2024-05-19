@@ -398,7 +398,7 @@ DROP TABLE IF EXISTS `halodb`.`group_sharing_sample` ;
 CREATE TABLE IF NOT EXISTS `halodb`.`group_sharing_sample` (
   `group_id` INT(11) NOT NULL,
   `sample_id` INT(11) NOT NULL,
-  `relation` ENUM("read", "readwrite") NULL,
+  `relation` ENUM('read', 'readwrite') NULL,
   PRIMARY KEY (`group_id`, `sample_id`),
   INDEX `fk_groups_has_samples_samples1_idx` (`sample_id` ASC),
   INDEX `fk_groups_has_samples_groups1_idx` (`group_id` ASC),
