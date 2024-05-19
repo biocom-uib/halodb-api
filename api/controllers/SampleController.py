@@ -31,15 +31,14 @@ class SampleController:
     @classmethod
     def get_samples_related_to_user(cls, user_id: int):
         with DatabaseInstance().session() as session:
-            stmt = (
-                select(Sample, UserHasGroup.relation, Group.name.label("group_name"),
+            stmt = (select(Sample, UserHasGroup.relation, Group.name.label("group_name"),
                        GroupSharingSample.read_only)
                 .select_from(UserHasGroup)
                 .join(GroupSharingSample, UserHasGroup.group_id == GroupSharingSample.group_id)
                 .join(Sample, GroupSharingSample.sample_id == Sample.id)
-                .where(UserHasGroup.user_id == user_id)
-            )
+                .where(UserHasGroup.user_id == user_id))
             samples = session.execute(stmt).all()
+            
         return samples
 
     @classmethod
@@ -69,10 +68,10 @@ class SampleController:
                 sample_to_create.exclude_files()
                 session.add(sample_to_create)
                 session.commit()
+                return sample_to_create.as_dict()
             except Exception as e:
                 session.rollback()
                 raise e
-
         return sample_to_create
 
     @classmethod
