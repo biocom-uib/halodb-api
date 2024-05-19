@@ -12,7 +12,8 @@ class UserController:
         This method returns a list of all users in the database.
         :return: the list of users, None if there's no user in the database.
         """
-        return User.query.all()
+        # return User.query.all()
+        return DatabaseInstance.get().session().query(User).all()
 
     @classmethod
     def get_user(cls, user_id: int):
@@ -58,7 +59,7 @@ class UserController:
         else:
             new_user.password = ""
 
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 # Check if the uid is already in use. The uid has to be unique,
                 # so no two users can have the same uid
@@ -95,7 +96,7 @@ class UserController:
         :return:
         """
         user_to_edit = None
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(User).filter_by(uid=uid)
                 usr = session.execute(stmt).first()
@@ -149,7 +150,7 @@ class UserController:
         :param uid: the unique identifier of the user.
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(User).filter_by(uid=uid)
                 usr = session.execute(stmt).first()

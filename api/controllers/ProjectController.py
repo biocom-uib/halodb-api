@@ -41,7 +41,7 @@ class ProjectController:
         :return: the groups having the user as a member (can be None).
         """
 
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             stmt = select(Project.id, Project.name, Project.description).join(UserProject).where(UserProject.user_id == user_id)
             projects = session.execute(stmt).all()
 
@@ -55,7 +55,7 @@ class ProjectController:
         :return: The project if it exists, None otherwise
         """
         return Project.query.get(project_id)
-        # with DatabaseInstance().session() as session:
+        # with DatabaseInstance.get().session() as session:
         #     stmt = select(Project).filter_by(id=project_id)
         #     project = session.execute(stmt).first()
         #
@@ -71,7 +71,7 @@ class ProjectController:
 
         project_to_create = Experiment('')
         project_to_create.from_dict(data)
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 # In order to have clarity, no two groups can have the same name
                 test = cls._get_project_by_name(project_to_create.name, session)
@@ -89,7 +89,7 @@ class ProjectController:
 
     @classmethod
     def update_project(cls, project_id: int, new_data: dict):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Project).filter_by(id=project_id)
                 project = session.execute(stmt).first()
@@ -113,7 +113,7 @@ class ProjectController:
 
     @classmethod
     def delete_project(cls, project_id: int):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Project).filter_by(id=project_id)
                 project = session.execute(stmt).first()

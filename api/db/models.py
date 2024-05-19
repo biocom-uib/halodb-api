@@ -157,10 +157,8 @@ class Group(HaloDatabaseInstanceModel):
 class GroupSharingSample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('group_sharing_sample')
 
-    def __init__(self, group_id, sample_id, **kw: any):
+    def __init__(self, **kw: any):
         super().__init__(**kw)
-        self.group_id = group_id
-        self.sample_id = sample_id
 
     def __repr__(self):
         return f'<GroupSharingSample {self.group_id} {self.sample_id}>'
@@ -566,12 +564,10 @@ class User(HaloDatabaseInstanceModel):
     def set(id, name):
         user = User.query.get(id)
         user.name = name
-        session = DatabaseInstance.get().session()
-        session.commit()
 
     @staticmethod
     def delete(user_id):
-        user = User.query.get(id)
+        user = User.query.get(user_id)
         session = DatabaseInstance.get().session()
         session.delete(user)
         session.commit()
@@ -683,10 +679,8 @@ class UserProject(HaloDatabaseInstanceModel):
 class UserSharedSample(HaloDatabaseInstanceModel):
     __table__ = DatabaseInstance.get().get_table('user_shared_sample')
 
-    def __init__(self, user_id, sample_id, **kw: any):
+    def __init__(self, **kw: any):
         super().__init__(**kw)
-        self.user_id = user_id
-        self.sample_id = sample_id
 
     def __repr__(self):
         return f'<UserSharedSample {self.user_id} {self.sample_id}>'

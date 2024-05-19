@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from api.db.db import DatabaseInstance
-from api.db.models import Sample, UserHasGroup, GroupSharingSample, Group
+from api.db.models import Sample, UserHasGroup, GroupSharingSample, Group, UserSharedSample
 
 
 class SampleController:
@@ -14,25 +14,25 @@ class SampleController:
 
     @classmethod
     def get_sample_by_id(cls, sample_id: int):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             stmt = select(Sample).filter_by(id=sample_id)
             sample = session.execute(stmt).first()[0]
 
         return sample
 
     @classmethod
-    def get_samples_by_user(cls, user_id: int):
-        with DatabaseInstance().session() as session:
+    def get_samples_owned_by_user(cls, user_id: int):
+        with DatabaseInstance.get().session() as session:
             stmt = select(Sample).filter_by(user_id=user_id)
             samples = session.execute(stmt).all()
 
         return samples
 
     @classmethod
-    def get_samples_related_to_user(cls, user_id: int):
-        with DatabaseInstance().session() as session:
-            stmt = (select(Sample, UserHasGroup.relation, Group.name.label("group_name"),
-                       GroupSharingSample.read_only)
+    def get_samples_shared_by_groups_to_user(cls, user_id: int):
+        with DatabaseInstance.get().session() as session:
+            stmt = (select(Sample, UserHasGroup.relation.label("membership"), Group.name.label("group_name"),
+                       GroupSharingSample.relation)
                 .select_from(UserHasGroup)
                 .join(GroupSharingSample, UserHasGroup.group_id == GroupSharingSample.group_id)
                 .join(Sample, GroupSharingSample.sample_id == Sample.id)
@@ -43,15 +43,25 @@ class SampleController:
 
     @classmethod
     def get_samples_by_group(cls, group_id: int):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             stmt = select(Sample).filter_by(group_id=group_id)
             samples = session.execute(stmt).all()
 
         return samples
 
     @classmethod
+    def get_samples_shared_by_users_to_user(cls, user_id):
+        with DatabaseInstance.get().session() as session:
+            stmt = select(Sample, UserSharedSample.relation
+                          ).where(UserSharedSample.user_id == user_id
+                                  ).where(UserSharedSample.sample_id == Sample.id)
+            samples = session.execute(stmt).all()
+
+        return samples
+
+    @classmethod
     def get_samples_by_experiment(cls, experiment_id: int):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             stmt = select(Sample).filter_by(experiment_id=experiment_id)
             samples = session.execute(stmt).all()
 
@@ -59,7 +69,7 @@ class SampleController:
 
     @classmethod
     def create_sample(cls, data: dict):
-        with (DatabaseInstance().session() as session):
+        with DatabaseInstance.get().session() as session:
             try:
                 sample_to_create = Sample()
                 sample_to_create.from_dict(data)
@@ -76,7 +86,7 @@ class SampleController:
 
     @classmethod
     def update_file(cls, sample_id: int, file_id: str, file_name: str, file_data: bytes):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 if not Sample.is_file_field(file_id):
                     raise Exception("The field is not a file")
@@ -98,7 +108,7 @@ class SampleController:
 
     @classmethod
     def update_sample(cls, sample_id: int, new_data: dict):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Sample).filter_by(id=sample_id)
                 sample = session.execute(stmt).first()
@@ -115,7 +125,7 @@ class SampleController:
 
     @classmethod
     def delete_sample(cls, sample_id: int):
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Sample).filter_by(id=sample_id)
                 sample = session.execute(stmt).first()
