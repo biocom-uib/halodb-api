@@ -5,6 +5,7 @@ import random
 
 from typing import Optional
 
+import jsonpickle
 from flask import Flask, Response, send_from_directory, jsonify, request, make_response, abort, send_file
 
 from flask_cors import CORS
@@ -68,10 +69,17 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 
 # Define a custom function to serialize datetime objects
 def serialize_datetime(obj):
-    if isinstance(obj, datetime.datetime):
+    if isinstance(obj, (datetime.date, datetime.datetime)):
         return obj.isoformat()
-    return obj
+    # return obj
     # raise TypeError("Type not serializable")
+
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (datetime.date, datetime.datetime)):
+            return o.isoformat()
+
+        return json.JSONEncoder.default(self, o)
 
 
 @app.route('/users/', methods=['GET'])
@@ -231,10 +239,16 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
         o2_list = ProjectController.get_projects_by_user(user_id)
         o2_list = [dict(row._mapping) for row in o2_list]
     elif table == "samples":
-        o2_list = {"by_user": SampleController.get_samples_by_user(user_id),
-                   "by_group": SampleController.get_samples_related_to_user(user_id)
+        being_owner = SampleController.get_samples_owned_by_user(user_id)
+        being_owner = [dict(row._mapping) for row in being_owner]
+        by_group = SampleController.get_samples_shared_by_groups_to_user(user_id)
+        by_group = [dict(row._mapping) for row in by_group]
+        by_others = SampleController.get_samples_shared_by_users_to_user(user_id)
+        by_others = [dict(row._mapping) for row in by_others]
+        o2_list = {"by_owner": being_owner,
+                   "by_group": by_group,
+                   "shared": by_others
                    }
-        o2_list = [row[0] for row in o2_list]
     else:
         raise Exception(f"Table {table} not found")
 
@@ -740,7 +754,9 @@ def get_table_data(table: str):
     :param table: the classification to be returned
     :return:
     """
-    o2 = db.session().query(db.get_table(table)).all()
+    # o2 = db.session().query(db.get_table(table)).all()
+    with DatabaseInstance.get().session() as session:
+        o2 = session.query(db.get_table(table)).all()
 
     o2_list = [dict(row._mapping) for row in o2]
 

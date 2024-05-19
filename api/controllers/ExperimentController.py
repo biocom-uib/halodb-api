@@ -40,7 +40,7 @@ class ExperimentController:
         :param user_id: the user identification.
         :return: the groups having the user as a member (can be None).
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             # subquery = select(UserExperiment).where(UserExperiment.user_id == user_id).subquery()
             # stmt = select(Experiment).join(subquery, Experiment.id == subquery.c.experiment_id)
 
@@ -50,7 +50,7 @@ class ExperimentController:
         return experiments
 
         # return Experiment.query.filter_by(user_id=user_id).all()
-        # with DatabaseInstance().session() as session:
+        # with DatabaseInstance.get().session() as session:
         #     stmt = select(Experiment).filter(Experiment.users.any(id=user_id))
         #     experiments = session.execute(stmt).all()
         #
@@ -80,7 +80,7 @@ class ExperimentController:
         :return: the experiment data if it exists, None otherwise.
         """
         return Experiment.query.get(experiment_id)
-        # with DatabaseInstance().session() as session:
+        # with DatabaseInstance.get().session() as session:
         #     stmt = select(Experiment).filter_by(id=experiment_id)
         #     experiment = session.execute(stmt).first()
         #
@@ -93,7 +93,7 @@ class ExperimentController:
         :param experiment_id: the id of the experiment.
         :return: the experiment data if it exists, None otherwise.
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             subquery = select(UserExperiment).where(UserExperiment.experiment_id == experiment_id,
                                                     UserExperiment.user_id == user_id).subquery()
             stmt = select(Experiment).join(subquery, Experiment.id == subquery.c.experiment_id)
@@ -112,7 +112,7 @@ class ExperimentController:
 
         experiment_to_create = Experiment('')
         experiment_to_create.from_dict(data)
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 test = Project.get_project_by_id(experiment_to_create.project_id)
                 if test is None:
@@ -145,7 +145,7 @@ class ExperimentController:
         :param new_data: the data to be used to update the experiment information
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Experiment).filter_by(id=experiment_id)
                 experiment = session.execute(stmt).first()
@@ -192,7 +192,7 @@ class ExperimentController:
         :param experiment_id: the experiment identifier
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Experiment).filter_by(id=experiment_id)
                 experiment = session.execute(stmt).first()

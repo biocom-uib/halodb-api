@@ -41,16 +41,17 @@ class GroupController:
         :param user_id: the user identification.
         :return: the groups having the user as a member (can be None).
         """
-        with DatabaseInstance().session() as session:
-            stmt = select(UserHasGroup.relation,
-                          Group.id, Group.name, Group.description).join_from(Group, UserHasGroup).where(
-                UserHasGroup.user_id == user_id)
-            groups = session.execute(stmt).all()
+        # with DatabaseInstance.get().session() as session:
+        session = DatabaseInstance.get().session()
+        stmt = select(UserHasGroup.relation,
+                      Group.id, Group.name, Group.description).join_from(Group, UserHasGroup).where(
+            UserHasGroup.user_id == user_id)
+        groups = session.execute(stmt).all()
 
         return groups
 
         # return Group.query.filter(Group.users.any(id=user_id)).all()
-        # with DatabaseInstance().session() as session:
+        # with DatabaseInstance.get().session() as session:
         #     stmt = select(Group).filter(Group.users.any(id=user_id))
         #     groups = session.execute(stmt).all()
         #
@@ -83,7 +84,7 @@ class GroupController:
         :param accept: true if the invitation is accepted, false if not.
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Group).filter_by(id=group_id)
                 group = session.execute(stmt).first()
@@ -114,7 +115,7 @@ class GroupController:
         :param group_id: the group that the user is being invited to
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Group).filter_by(id=group_id)
                 group = session.execute(stmt).first()
@@ -156,7 +157,7 @@ class GroupController:
 
         group_to_create = Group('')
         group_to_create.from_dict(data)
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 # In order to have clarity, no two groups can have the same name
                 test = cls._get_group_by_name(group_to_create.name, session)
@@ -182,7 +183,7 @@ class GroupController:
         :param new_data: The data of the group to be updated
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Group).filter_by(id=group_id)
                 group = session.execute(stmt).first()
@@ -214,7 +215,7 @@ class GroupController:
         :param group_id: the group identifier
         :return:
         """
-        with DatabaseInstance().session() as session:
+        with DatabaseInstance.get().session() as session:
             try:
                 stmt = select(Group).filter_by(id=group_id)
                 group = session.execute(stmt).first()
