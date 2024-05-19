@@ -3,6 +3,7 @@ from flask import request, abort
 from typing import Callable
 
 import firebase_admin
+from firebase_admin import credentials
 from firebase_admin.auth import ExpiredIdTokenError, RevokedIdTokenError, InvalidIdTokenError, CertificateFetchError, verify_id_token
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -21,7 +22,8 @@ def get_config():
     return config
 
 
-firebaseapp = firebase_admin.initialize_app(options=get_config())
+cred = credentials.Certificate("credentials.json")
+firebaseapp = firebase_admin.initialize_app(cred)
 
 
 def verify_token(token):

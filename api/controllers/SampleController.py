@@ -22,7 +22,7 @@ class SampleController:
     @classmethod
     def get_samples_by_user(cls, user_id: int):
         with DatabaseInstance().session() as session:
-            stmt = select(Sample).filter_by(owner_id=user_id)
+            stmt = select(Sample).filter_by(user_id=user_id)
             samples = session.execute(stmt).all()
             # session.close()
             return samples
@@ -54,12 +54,10 @@ class SampleController:
                 sample_to_create.exclude_files()
                 session.add(sample_to_create)
                 session.commit()
+                return sample_to_create.as_dict()
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
-        return sample_to_create
 
     @classmethod
     def update_file(cls, sample_id: int, file_id: str, file_name: str, file_data: bytes):

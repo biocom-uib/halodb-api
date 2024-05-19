@@ -516,7 +516,7 @@ def upload_sample(params: dict, **kwargs):
     params['updated'] = now
 
     # no sample id has to be provided, the sample is new. Make sure the id is not in the params list
-    params.pop('id')
+    params.pop('id', None)
 
     invalid = [fld for fld in params if not Sample.valid_field(fld)]
     if len(invalid) == 0:
@@ -524,7 +524,7 @@ def upload_sample(params: dict, **kwargs):
             sample_created = SampleController.create_sample(params)
             message = {'status': 'success',
                        'message': 'Sample created',
-                       'sample': sample_created.as_dict()
+                       'sample': sample_created
                        }
             result_status = 200
         except Exception as e:
