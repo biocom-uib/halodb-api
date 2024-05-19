@@ -13,6 +13,7 @@ RUN pip3 install keyring keyrings.google-artifactregistry-auth
 
 # Install requirements
 COPY requirements.txt requirements.txt
+COPY credentials.json /opt/halodb-api/credentials.json
 RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /opt/halodb-api
@@ -43,6 +44,6 @@ COPY --chown=halodb:biocom api /opt/halodb-api/api
 
 CMD exec gunicorn \
   --bind=:5000 --workers=4 --threads=16 --timeout=0 \
-  --access-logfile=/var/log/halodb-api/access.log \
-  --error-logfile=/var/log/halodb-api/error.log --log-level=INFO \
+  # --access-logfile=/var/log/halodb-api/access.log \
+  # --error-logfile=/var/log/halodb-api/error.log --log-level=INFO \
   api.main:app
