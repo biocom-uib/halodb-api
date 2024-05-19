@@ -83,8 +83,7 @@ class UserController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
+
         return user_created
 
     @classmethod
@@ -135,8 +134,7 @@ class UserController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
+
         # It may be necessary avoid the lazy loading of the user's samples
         # return user_to_edit
 
@@ -181,5 +179,3 @@ class UserController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()

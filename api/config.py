@@ -24,7 +24,7 @@ def get_secret(var: str, file_var: str, default: Optional[str]) -> Optional[str]
     return default
 
 APP_ENV = os.getenv('APP_ENV', 'development')
-UPLOADS_DIR = os.getenv('UPLOADS_DIR')
+UPLOADS_DIR = os.getenv('UPLOADS_DIR', './uploads')
 
 MYSQL_HOST = os.getenv('MYSQL_HOST', 'db')
 
@@ -34,4 +34,3 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE', 'halodb')
 MYSQL_USER = os.getenv('MYSQL_USER_NAME', 'halodb')
 MYSQL_PASSWORD = get_secret('MYSQL_PASSWORD', 'MYSQL_PASSWORD_FILE', 'halodb')
 
-UPLOADS_DIR = os.getenv('UPLOADS_DIR', './uploads')

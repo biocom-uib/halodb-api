@@ -46,15 +46,15 @@ class ExperimentController:
 
             stmt = select(Experiment.id, Experiment.name, Experiment.description, Experiment.project_id).join(UserExperiment).where(UserExperiment.user_id == user_id)
             experiments = session.execute(stmt).all()
-            session.close()
-            return experiments
+
+        return experiments
 
         # return Experiment.query.filter_by(user_id=user_id).all()
         # with DatabaseInstance().session() as session:
         #     stmt = select(Experiment).filter(Experiment.users.any(id=user_id))
         #     experiments = session.execute(stmt).all()
-        #     session.close()
-        #     return experiments
+        #
+        # return experiments
 
     @classmethod
     def get_by_project(cls, user_id: int, project_id: int):
@@ -83,8 +83,8 @@ class ExperimentController:
         # with DatabaseInstance().session() as session:
         #     stmt = select(Experiment).filter_by(id=experiment_id)
         #     experiment = session.execute(stmt).first()
-        #     session.close()
-        #     return experiment
+        #
+        # return experiment
 
     @classmethod
     def get_experiment_by_id_user_id(cls, experiment_id: int, user_id: int):
@@ -98,15 +98,15 @@ class ExperimentController:
                                                     UserExperiment.user_id == user_id).subquery()
             stmt = select(Experiment).join(subquery, Experiment.id == subquery.c.experiment_id)
             experiment = session.execute(stmt).first()
-            session.close()
+
             return experiment
 
     @classmethod
-    def create_experiment(cls, data: dict, user_id: int):
+    def create_experiment(cls, user_id: int, data: dict):
         """
         To create an experiment, some data is needed. The experiment name must be unique in the project.
-        :param data: a dictionary with the keys and values to be used to create the experiment.
         :param user_id: the user that is creating the experiment.
+        :param data: a dictionary with the keys and values to be used to create the experiment.
         :return: the experiment data updated with the auto-calculated fields.
         """
 
@@ -134,8 +134,7 @@ class ExperimentController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
+
             return experiment_created
 
     @classmethod
@@ -183,8 +182,6 @@ class ExperimentController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()
 
     @classmethod
     def delete_experiment(cls, experiment_id: int):
@@ -216,5 +213,3 @@ class ExperimentController:
             except Exception as e:
                 session.rollback()
                 raise e
-            finally:
-                session.close()

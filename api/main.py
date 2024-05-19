@@ -86,7 +86,8 @@ def users(params: dict, **kwargs):
     if request.method == 'GET':
         log.info('Request received for list of users')
         resp = [usr.as_dict() for usr in UserController.list_users()]
-        message = json.dumps(resp, default=serialize_datetime)
+        # message = json.dumps(resp, default=serialize_datetime)
+        message = json.dumps(resp, default=str)
         result_status = 200
 
     return Response(response=message,
@@ -117,7 +118,8 @@ def add_user(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -156,7 +158,8 @@ def user_handle(params: dict, **kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -191,7 +194,8 @@ def user_edit(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -217,19 +221,24 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
 
     if table == "groups":
         o2_list = GroupController.get_groups_by_user(user_id)
+        o2_list = [dict(row._mapping) for row in o2_list]
     # elif table == "users":
     #     o2_list = UserController.get_users_by_user(user_id)
     elif table == "experiments":
         o2_list = ExperimentController.get_experiments_by_user(user_id)
+        o2_list = [dict(row._mapping) for row in o2_list]
     elif table == "projects":
         o2_list = ProjectController.get_projects_by_user(user_id)
+        o2_list = [dict(row._mapping) for row in o2_list]
     elif table == "samples":
-        o2_list = SampleController.get_samples_by_user(user_id)
+        o2_list = {"by_user": SampleController.get_samples_by_user(user_id),
+                   "by_group": SampleController.get_samples_related_to_user(user_id)
+                   }
+        o2_list = [row[0] for row in o2_list]
     else:
         raise Exception(f"Table {table} not found")
 
-    o2_list = [dict(row._mapping) for row in o2_list]
-    return Response(response=json.dumps(o2_list, default=serialize_datetime),
+    return Response(response=json.dumps(o2_list, default=str),
                     status=200,
                     mimetype="application/json")
 
@@ -255,12 +264,13 @@ def create_experiment(params: dict, project_id: any, **kwargs):
     if request.method == 'GET':
         log.info(f'Request received for list of experiments related to user {user_id =} and {project_id =}')
         resp = [exp.as_dict() for exp in ExperimentController.get_by_project(user_id, project_id)]
-        message = json.dumps(resp, default=serialize_datetime)
+        # message = json.dumps(resp, default=serialize_datetime)
+        message = json.dumps(resp, default=str)
         result_status = 200
     elif request.method == 'POST':
         log.info(f'Request received for creating a new experiment for {user_id =} and {project_id =}')
         try:
-            new_experiment = ExperimentController.create_experiment(params, user_id)
+            new_experiment = ExperimentController.create_experiment(user_id, params)
             new_experiment.project_id = project_id
             new_experiment.user_id = user_id
 
@@ -276,7 +286,8 @@ def create_experiment(params: dict, project_id: any, **kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -322,7 +333,8 @@ def experiment_handle(params: dict, id: Optional[int] = None, **kwargs):
                            }
                 result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -354,7 +366,8 @@ def experiment_edit(params: dict, id: Optional[int] = None, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -376,7 +389,8 @@ def create_project(params: dict, **kwargs):
     if request.method == 'GET':
         log.info('Request received for list of projects')
         resp = [prj.as_dict() for prj in ProjectController.list_projects()]
-        message = json.dumps(resp, default=serialize_datetime)
+        # message = json.dumps(resp, default=serialize_datetime)
+        message = json.dumps(resp, default=str)
         result_status = 200
     elif request.method == 'POST':
         log.info('Request received for creating a new project')
@@ -395,7 +409,8 @@ def create_project(params: dict, **kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -433,7 +448,8 @@ def project_handle(params: dict, id: Optional[int] = None, **kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -466,7 +482,8 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -488,7 +505,8 @@ def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
         message = [exp.as_dict() for exp in experiments]
         result_status = 200
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
+    # return Response(response=json.dumps(message, default=serialize_datetime),
+    return Response(response=json.dumps(message, default=str),
                     status=result_status,
                     mimetype="application/json")
 
@@ -781,6 +799,8 @@ def invite(owner: int, invited: int, group: int):
 
 # ##############################################################
 # Testing the API
+#    The following endpoints are used to test the API.
+#    They will be removed.
 # ##############################################################
 @app.route('/test/create/<string:table>/', methods=['POST'])
 @wrap_error
@@ -799,11 +819,12 @@ def create_table(params: dict, table: str):
     else:
         raise Exception(f"Table {table} not found")
 
-    if table == "users":
-        json_resp = json.dumps(new_creation.as_dict(), default=serialize_datetime)
-    else:
-        json_resp = json.dumps(new_creation.as_dict())
+    # if table == "users":
+    #     json_resp = json.dumps(new_creation.as_dict(), default=serialize_datetime)
+    # else:
+    #     json_resp = json.dumps(new_creation.as_dict())
 
+    json_resp = json.dumps(new_creation.as_dict(), default=str)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -814,19 +835,20 @@ def create_table(params: dict, table: str):
 @get_params
 def update_table(params: dict, table: str):
     if table == "groups":
-        modification = GroupController.update_group(params)
+        modification = GroupController.update_group(1, params)
     elif table == "users":
-        modification = UserController.update_user(params)
+        modification = UserController.update_user(20, params)
     elif table == "experiments":
-        modification = ExperimentController.update_experiment(params)
+        modification = ExperimentController.update_experiment(20, params)
     elif table == "projects":
-        modification = ProjectController.update_project(params)
+        modification = ProjectController.update_project(1, params)
     elif table == "samples":
-        modification = SampleController.update_sample(params)
+        modification = SampleController.update_sample(1, params)
     else:
         raise Exception(f"Table {table} not found")
 
-    json_resp = json.dumps(modification.as_dict(), default=serialize_datetime)
+    # json_resp = json.dumps(modification.as_dict(), default=serialize_datetime)
+    json_resp = json.dumps(modification.as_dict(), default=str)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -849,7 +871,8 @@ def query_table(params: dict, table: str, id: int):
     else:
         raise Exception(f"Table {table} not found")
 
-    json_resp = json.dumps(answer.as_dict(), default=serialize_datetime)
+    # json_resp = json.dumps(answer.as_dict(), default=serialize_datetime)
+    json_resp = json.dumps(answer.as_dict(), default=str)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -863,7 +886,7 @@ def get_table_list(table: str):
     elif table == "users":
         o2_list = UserController.list_users()
     elif table == "experiments":
-        o2_list = ExperimentController.list_experiments()
+        o2_list = ExperimentController.list_experiments(1)
     elif table == "projects":
         o2_list = ProjectController.list_projects()
     elif table == "samples":
@@ -872,7 +895,8 @@ def get_table_list(table: str):
         raise Exception(f"Table {table} not found")
 
     result = [x.as_dict() for x in o2_list]
-    return Response(response=json.dumps(result, default=serialize_datetime),
+    # return Response(response=json.dumps(result, default=serialize_datetime),
+    return Response(response=json.dumps(result, default=str),
                     status=200,
                     mimetype="application/json")
 
