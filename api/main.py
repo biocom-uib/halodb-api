@@ -2,24 +2,19 @@ import datetime
 import json
 import os
 import random
-
 from typing import Optional
 
-import jsonpickle
 from flask import Flask, Response, send_from_directory, jsonify, request, make_response, abort, send_file
-
 from flask_cors import CORS
-from flask_log_request_id import RequestID
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_log_request_id import RequestID
 from werkzeug.utils import secure_filename
 
 from api import log
 from api.auth import required_token, verify_token
-
-from api.decorators import wrap_error, get_params, log_params
-
 from api.db.db import SQLALCHEMY_DATABASE_URI, DatabaseInstance
+from api.decorators import wrap_error, get_params, log_params
 
 # from api.db.models  # Do not import yet, the database must be initialized first
 
@@ -47,7 +42,7 @@ else:
     log.error('The database could not be initialized')
 
 # This has to be imported here
-from api.db.models import Temperature, Ph, Salinity, User, Sample
+from api.db.models import Temperature, Ph, Salinity, Sample
 
 from api.controllers.UserController import UserController
 from api.controllers.GroupController import GroupController
@@ -73,6 +68,7 @@ def serialize_datetime(obj):
         return obj.isoformat()
     # return obj
     # raise TypeError("Type not serializable")
+
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, o):
