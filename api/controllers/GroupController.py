@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.db.db import DatabaseInstance
 from api.db.models import Group, UserHasGroup
+from api.utils import to_dict
 
 
 class GroupController:
@@ -32,7 +33,7 @@ class GroupController:
         """
         :return: the list of the whole set of groups defined in the database.
         """
-        return Group.query.all()
+        return to_dict(Group.query.all())
 
     @classmethod
     def get_groups_by_user(cls, user_id: str):
@@ -48,14 +49,7 @@ class GroupController:
             UserHasGroup.user_id == user_id)
         groups = session.execute(stmt).all()
 
-        return groups
-
-        # return Group.query.filter(Group.users.any(id=user_id)).all()
-        # with DatabaseInstance.get().session() as session:
-        #     stmt = select(Group).filter(Group.users.any(id=user_id))
-        #     groups = session.execute(stmt).all()
-        #
-        # return groups
+        return to_dict(groups)
 
     @classmethod
     def get_group_by_name(cls, name: str):
@@ -172,7 +166,7 @@ class GroupController:
                 session.rollback()
                 raise e
 
-            return group_created
+            return group_created.as_dict()
 
     @classmethod
     def update_group(cls, group_id: int, new_data: dict):
@@ -206,6 +200,7 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
+            return group_to_edit.as_dict()
 
     @classmethod
     def delete_group(cls, group_id: int):
