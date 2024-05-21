@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from api.db.db import DatabaseInstance
 from api.db.models import Project, Experiment, UserProject
+from api.utils import to_dict
 
 
 class ProjectController:
@@ -31,7 +32,7 @@ class ProjectController:
         Return a list of the projects in the database
         :return:
         """
-        return Project.query.all()
+        return to_dict(Project.query.all())
 
     @classmethod
     def get_projects_by_user(cls, user_id: int):
@@ -45,7 +46,7 @@ class ProjectController:
             stmt = select(Project.id, Project.name, Project.description).join(UserProject).where(UserProject.user_id == user_id)
             projects = session.execute(stmt).all()
 
-        return projects
+        return to_dict(projects)
 
     @classmethod
     def get_project_by_id(cls, project_id: int):
@@ -54,7 +55,7 @@ class ProjectController:
         :param project_id:
         :return: The project if it exists, None otherwise
         """
-        return Project.query.get(project_id)
+        return Project.query.get(project_id).as_dict()
         # with DatabaseInstance.get().session() as session:
         #     stmt = select(Project).filter_by(id=project_id)
         #     project = session.execute(stmt).first()
@@ -85,7 +86,7 @@ class ProjectController:
             except Exception as e:
                 session.rollback()
                 raise e
-            return project_created
+            return project_created.as_dict()
 
     @classmethod
     def update_project(cls, project_id: int, new_data: dict):
@@ -110,6 +111,7 @@ class ProjectController:
             except Exception as e:
                 session.rollback()
                 raise e
+            return project_to_edit.as_dict()
 
     @classmethod
     def delete_project(cls, project_id: int):

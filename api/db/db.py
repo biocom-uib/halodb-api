@@ -40,6 +40,9 @@ class DatabaseInstance:
     def session(self):
         return self.SessionLocal()
 
+    def cursor(self):
+        return self.engine.raw_connection().cursor()
+
     def get_db(self):
         return self.db
 

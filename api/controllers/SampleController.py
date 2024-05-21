@@ -1,6 +1,10 @@
+import datetime
+
 from sqlalchemy import select
+
 from api.db.db import DatabaseInstance
-from api.db.models import Sample, UserHasGroup, GroupSharingSample, Group, UserSharedSample
+from api.db.models import Sample
+from api.utils import convert_to_dict, to_dict
 
 
 class SampleController:
@@ -29,35 +33,13 @@ class SampleController:
         return samples
 
     @classmethod
-    def get_samples_shared_by_groups_to_user(cls, user_id: int):
-        with DatabaseInstance.get().session() as session:
-            stmt = (select(Sample, UserHasGroup.relation.label("membership"), Group.name.label("group_name"),
-                       GroupSharingSample.relation)
-                .select_from(UserHasGroup)
-                .join(GroupSharingSample, UserHasGroup.group_id == GroupSharingSample.group_id)
-                .join(Sample, GroupSharingSample.sample_id == Sample.id)
-                .where(UserHasGroup.user_id == user_id))
-            samples = session.execute(stmt).all()
-            
-        return samples
-
-    @classmethod
-    def get_samples_by_group(cls, group_id: int):
-        with DatabaseInstance.get().session() as session:
-            stmt = select(Sample).filter_by(group_id=group_id)
-            samples = session.execute(stmt).all()
-
-        return samples
-
-    @classmethod
-    def get_samples_shared_by_users_to_user(cls, user_id):
-        with DatabaseInstance.get().session() as session:
-            stmt = select(Sample, UserSharedSample.relation
-                          ).where(UserSharedSample.user_id == user_id
-                                  ).where(UserSharedSample.sample_id == Sample.id)
-            samples = session.execute(stmt).all()
-
-        return samples
+    def get_samples_shared_with_user(cls, user_id):
+        with DatabaseInstance.get().cursor() as cursor:
+            cursor.callproc("get_samples_available", [user_id])
+            column_names = [desc[0] for desc in cursor.description]
+            result = list(cursor.fetchall())
+        data = [convert_to_dict(row, column_names) for row in result]
+        return data
 
     @classmethod
     def get_samples_by_experiment(cls, experiment_id: int):
@@ -82,7 +64,7 @@ class SampleController:
             except Exception as e:
                 session.rollback()
                 raise e
-        return sample_to_create
+        return sample_to_create.as_dict()
 
     @classmethod
     def update_file(cls, sample_id: int, file_id: str, file_name: str, file_data: bytes):
@@ -116,12 +98,17 @@ class SampleController:
                     raise Exception("Sample not found")
                 sample_to_edit = sample[0]
                 for key, value in new_data.items():
-                    setattr(sample_to_edit, key, value)
-                session.add(sample_to_edit)
+                    if key is not "created" and key is not "updated":
+                        setattr(sample_to_edit, key, value)
+
+                setattr(sample_to_edit, 'updated', datetime.datetime.now())
+
+                # session.add(sample_to_edit)
                 session.commit()
             except Exception as e:
                 session.rollback()
                 raise e
+        return sample_to_edit.as_dict()
 
     @classmethod
     def delete_sample(cls, sample_id: int):
@@ -140,4 +127,4 @@ class SampleController:
 
     @classmethod
     def list_samples(cls):
-        return Sample.query.all()
+        return to_dict(Sample.query.all())
