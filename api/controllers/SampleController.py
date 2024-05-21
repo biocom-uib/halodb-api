@@ -55,16 +55,14 @@ class SampleController:
             try:
                 sample_to_create = Sample()
                 sample_to_create.from_dict(data)
-                # The fields related to the files are treated in a special way.
-                # Then, they are not included in the creation of the sample.
-                sample_to_create.exclude_files()
+
                 session.add(sample_to_create)
+
                 session.commit()
                 return sample_to_create.as_dict()
             except Exception as e:
                 session.rollback()
                 raise e
-        return sample_to_create.as_dict()
 
     @classmethod
     def update_file(cls, sample_id: int, file_id: str, file_name: str, file_data: bytes):
@@ -83,6 +81,8 @@ class SampleController:
 
                 sample_to_edit.add_file(file_id, file_data, filename_field, file_name)
 
+                session.add(sample_to_edit)
+
                 session.commit()
             except Exception as e:
                 session.rollback()
@@ -98,17 +98,18 @@ class SampleController:
                     raise Exception("Sample not found")
                 sample_to_edit = sample[0]
                 for key, value in new_data.items():
-                    if key != "created" and key != "updated":
+                    if Sample.valid_field(key):
                         setattr(sample_to_edit, key, value)
 
                 setattr(sample_to_edit, 'updated', datetime.datetime.now())
 
-                # session.add(sample_to_edit)
+                session.add(sample_to_edit)
+                result = sample_to_edit.as_dict()
                 session.commit()
             except Exception as e:
                 session.rollback()
                 raise e
-        return sample_to_edit.as_dict()
+        return result
 
     @classmethod
     def delete_sample(cls, sample_id: int):
