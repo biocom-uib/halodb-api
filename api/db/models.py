@@ -379,6 +379,10 @@ class Sample(HaloDatabaseInstanceModel):
         "pgenes": "pgenesname"
                    }
 
+    __forbidden_files__ = [
+        "created", "updated", "id", "is_public", "experiment_id"
+    ]
+
     @classmethod
     def is_file_field(cls, field):
         return field in cls.__file_fields__.keys()
@@ -389,13 +393,20 @@ class Sample(HaloDatabaseInstanceModel):
             return cls.__file_fields__[field]
         return None
 
-    def exclude_files(self):
-        return {k: v for k, v in self.as_dict().items()
-                if k not in self.__file_fields__.keys() and k not in self.__file_fields__.values()}
+    @classmethod
+    def exclude_param_files(cls, params: dict):
+        return {k: v for k, v in params.items()
+                if k not in cls.__file_fields__.keys() and k not in cls.__file_fields__.values()}
+
+    @classmethod
+    def exclude_forbidden_fields(cls, params: dict):
+        return {k: v for k, v in params.items() if k not in cls.__forbidden_files__}
 
     @classmethod
     def valid_field(cls, field):
-        return field in cls.__table__.columns
+        return (field not in cls.__file_fields__.keys() and
+                field not in cls.__file_fields__.values() and
+                field not in cls.__forbidden_files__)
 
     @staticmethod
     def get(id):
@@ -416,7 +427,7 @@ class Sample(HaloDatabaseInstanceModel):
 
         uuid_file = getattr(self, field)
         if uuid_file is None:
-            uuid_file = uuid.uuid4()
+            uuid_file = str(uuid.uuid4())
             setattr(self, field, uuid_file)
 
         setattr(self, Sample.get_file_name_field(field), filename)

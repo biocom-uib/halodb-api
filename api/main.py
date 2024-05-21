@@ -508,21 +508,25 @@ def upload_sample(params: dict, **kwargs):
     log.info('Request received for uploading a sample')
     uid: str = kwargs['uid']
     user_id = UserController.get_user_by_uid(uid).id
-
-    # The owner is the current user
-    params['user_id'] = user_id
-
-    # the creation a update date are the same, the sample is new.
-    now = datetime.datetime.now()
-    params['created'] = now
-    params['updated'] = now
-
-    # no sample id has to be provided, the sample is new. Make sure the id is not in the params list
-    params.pop('id', None)
+    # The fields related to the files are treated in a special way.
+    # Then, they are not included in the creation of the sample.
+    params = Sample.exclude_param_files(params)
+    params = Sample.exclude_forbidden_fields(params)
 
     invalid = [fld for fld in params if not Sample.valid_field(fld)]
     if len(invalid) == 0:
         try:
+            # the creation and update dates are the same, the sample is new.
+            now = datetime.datetime.now()
+            params['created'] = now
+            params['updated'] = now
+
+            # A new sample is not public.
+            params['is_public'] = False
+
+            # Fix the owner of the sample to the current owner
+            params['user_id'] = user_id
+
             sample_created = SampleController.create_sample(params)
             message = {'status': 'success',
                        'message': 'Sample created',
@@ -565,6 +569,54 @@ def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
 
     filename, filedata = sample.get_file_data(input_type)
     return send_file(filedata, download_name=filename)
+
+
+@app.route('/upload/sample/<id_sample>', methods=['PUT', 'PATCH'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def update_fields_sample(params: dict, id_sample: int, **kwargs):
+    log.info('Request received for update a sample')
+    uid: str = kwargs['uid']
+    user_id = UserController.get_user_by_uid(uid).id
+
+    sample: Sample = SampleController.get_sample_by_id(id_sample)
+    if sample is None:
+        abort(400, f'Sample with id {id_sample} not found')
+
+    if sample.user_id != user_id:
+        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+
+    # The fields related to the files are treated in a special way.
+    # Then, they are not included in the creation of the sample.
+    params = Sample.exclude_param_files(params)
+    params = Sample.exclude_forbidden_fields(params)
+
+    invalid = [fld for fld in params if not Sample.valid_field(fld)]
+    if len(invalid) == 0:
+        try:
+            sample_updated = SampleController.update_sample(id_sample, params)
+            message = {'status': 'success',
+                       'message': 'Sample created',
+                       'sample': sample_updated
+                       }
+            result_status = 200
+        except Exception as e:
+            message = {'status': 'error',
+                       'message': str(e)
+                       }
+            result_status = 400
+    else:
+        message = {'status': 'error',
+                   'message': 'wrong field names',
+                   'fields': invalid}
+        result_status = 400
+
+    return Response(response=json.dumps(message, default=str),
+                    status=result_status,
+                    mimetype="application/json")
 
 
 @app.route('/upload/sample/<id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
