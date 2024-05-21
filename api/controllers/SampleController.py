@@ -98,7 +98,7 @@ class SampleController:
                     raise Exception("Sample not found")
                 sample_to_edit = sample[0]
                 for key, value in new_data.items():
-                    if key is not "created" and key is not "updated":
+                    if key != "created" and key != "updated":
                         setattr(sample_to_edit, key, value)
 
                 setattr(sample_to_edit, 'updated', datetime.datetime.now())
