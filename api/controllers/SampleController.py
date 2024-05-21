@@ -104,12 +104,12 @@ class SampleController:
                 setattr(sample_to_edit, 'updated', datetime.datetime.now())
 
                 session.add(sample_to_edit)
-
+                result = sample_to_edit.as_dict()
                 session.commit()
             except Exception as e:
                 session.rollback()
                 raise e
-        return sample_to_edit.as_dict()
+        return result
 
     @classmethod
     def delete_sample(cls, sample_id: int):
