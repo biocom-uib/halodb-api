@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from api.db.db import DatabaseInstance
 from api.db.models import User, Sample, Author
+from api.utils import to_dict
 
 
 class UserController:
@@ -12,8 +13,8 @@ class UserController:
         This method returns a list of all users in the database.
         :return: the list of users, None if there's no user in the database.
         """
-        # return User.query.all()
-        return DatabaseInstance.get().session().query(User).all()
+        return to_dict(User.query.all())
+
 
     @classmethod
     def get_user(cls, user_id: int):
@@ -22,7 +23,7 @@ class UserController:
         :param user_id: the user id.
         :return: the user if it exists, None otherwise.
         """
-        return User.query.get(user_id)
+        return User.query.get(user_id).as_dict()
 
     @classmethod
     def get_user_by_uid(cls, uid: str):
@@ -85,7 +86,7 @@ class UserController:
                 session.rollback()
                 raise e
 
-        return user_created
+        return user_created.as_dict()
 
     @classmethod
     def update_user(cls, uid: str, new_data: dict):
@@ -137,7 +138,7 @@ class UserController:
                 raise e
 
         # It may be necessary avoid the lazy loading of the user's samples
-        # return user_to_edit
+        return user_to_edit.as_dict()
 
     @classmethod
     def delete_user(cls, uid: str):

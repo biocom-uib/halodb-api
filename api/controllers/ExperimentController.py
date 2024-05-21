@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from api.db.db import DatabaseInstance
 from api.db.models import Experiment, UserExperiment, Project, UserProject
+from api.utils import to_dict
 
 
 class ExperimentController:
@@ -31,7 +32,7 @@ class ExperimentController:
         """
         :return: the list of the whole set of experiments defined in the database
         """
-        return Experiment.query.all()
+        return to_dict(Experiment.query.all())
 
     @classmethod
     def get_experiments_by_user(cls, user_id: int):
@@ -47,7 +48,7 @@ class ExperimentController:
             stmt = select(Experiment.id, Experiment.name, Experiment.description, Experiment.project_id).join(UserExperiment).where(UserExperiment.user_id == user_id)
             experiments = session.execute(stmt).all()
 
-        return experiments
+        return to_dict(experiments)
 
         # return Experiment.query.filter_by(user_id=user_id).all()
         # with DatabaseInstance.get().session() as session:
@@ -70,7 +71,7 @@ class ExperimentController:
         if link is None:
             return None
 
-        return Experiment.query.filter_by(project_id=project_id).all()
+        return [exp.as_dict() for exp in Experiment.query.filter_by(project_id=project_id).all()]
 
     @classmethod
     def get_experiment_by_id(cls, experiment_id: int):
@@ -79,7 +80,7 @@ class ExperimentController:
         :param experiment_id: the id of the experiment.
         :return: the experiment data if it exists, None otherwise.
         """
-        return Experiment.query.get(experiment_id)
+        return Experiment.query.get(experiment_id).as_dict()
         # with DatabaseInstance.get().session() as session:
         #     stmt = select(Experiment).filter_by(id=experiment_id)
         #     experiment = session.execute(stmt).first()
@@ -135,7 +136,7 @@ class ExperimentController:
                 session.rollback()
                 raise e
 
-            return experiment_created
+            return experiment_created.as_dict()
 
     @classmethod
     def update_experiment(cls, experiment_id: int, new_data: dict):
@@ -182,6 +183,7 @@ class ExperimentController:
             except Exception as e:
                 session.rollback()
                 raise e
+            return experiment_to_edit.as_dict()
 
     @classmethod
     def delete_experiment(cls, experiment_id: int):

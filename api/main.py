@@ -66,16 +66,16 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 def serialize_datetime(obj):
     if isinstance(obj, (datetime.date, datetime.datetime)):
         return obj.isoformat()
-    # return obj
+    return obj
     # raise TypeError("Type not serializable")
 
 
-class DateTimeEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, (datetime.date, datetime.datetime)):
-            return o.isoformat()
+# class DateTimeEncoder(json.JSONEncoder):
+#    def default(self, o):
+#        if isinstance(o, (datetime.date, datetime.datetime)):
+#            return o.isoformat()
 
-        return json.JSONEncoder.default(self, o)
+#        return json.JSONEncoder.default(self, o)
 
 
 @app.route('/users/', methods=['GET'])
@@ -89,7 +89,7 @@ def users(params: dict, **kwargs):
 
     if request.method == 'GET':
         log.info('Request received for list of users')
-        resp = [usr.as_dict() for usr in UserController.list_users()]
+        resp = UserController.list_users()
         # message = json.dumps(resp, default=serialize_datetime)
         message = json.dumps(resp, default=str)
         result_status = 200
@@ -112,7 +112,7 @@ def add_user(params: dict, **kwargs):
         new_user = UserController.create_user(params)
         message = {'status': 'success',
                    'message': 'User created',
-                   'user': new_user.as_dict()
+                   'user': new_user
                    }
         result_status = 200
         log.info(f'User with uid "{new_user.uid}" created')
@@ -122,8 +122,7 @@ def add_user(params: dict, **kwargs):
                    }
         result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -143,7 +142,7 @@ def user_handle(params: dict, **kwargs):
     if request.method == 'GET':
         log.info(f'GET request received for user { uid = } with { params = }')
         usr = UserController.get_user_by_uid(uid)
-        message = usr.as_dict()
+        message = usr
         result_status = 200
 
     if request.method == 'DELETE':
@@ -162,8 +161,7 @@ def user_handle(params: dict, **kwargs):
                        }
             result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -179,15 +177,13 @@ def user_edit(params: dict, **kwargs):
 
     log.info(f'PUT/PATCH request received for user {uid = } with {params = }')
 
-    result_status = 200
-    message = ''
     request_form = json.loads(request.data)
     try:
         UserController.update_user(uid, request_form)
         updated = UserController.get_user_by_uid(uid)
         message = {'status': 'success',
                    'message': 'User updated',
-                   'user': updated.as_dict()
+                   'user': updated
                    }
         result_status = 200
         log.info(f'User with id = {updated.id} updated')
@@ -198,8 +194,7 @@ def user_edit(params: dict, **kwargs):
                    }
         result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -224,31 +219,19 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
     user_id = UserController.get_user_by_uid(uid).id
 
     if table == "groups":
-        o2_list = GroupController.get_groups_by_user(user_id)
-        o2_list = [dict(row._mapping) for row in o2_list]
+        result = GroupController.get_groups_by_user(user_id)
     # elif table == "users":
-    #     o2_list = UserController.get_users_by_user(user_id)
+    #     result = UserController.get_users_by_user(user_id)
     elif table == "experiments":
-        o2_list = ExperimentController.get_experiments_by_user(user_id)
-        o2_list = [dict(row._mapping) for row in o2_list]
+        result = ExperimentController.get_experiments_by_user(user_id)
     elif table == "projects":
-        o2_list = ProjectController.get_projects_by_user(user_id)
-        o2_list = [dict(row._mapping) for row in o2_list]
+        result = ProjectController.get_projects_by_user(user_id)
     elif table == "samples":
-        being_owner = SampleController.get_samples_owned_by_user(user_id)
-        being_owner = [dict(row._mapping) for row in being_owner]
-        by_group = SampleController.get_samples_shared_by_groups_to_user(user_id)
-        by_group = [dict(row._mapping) for row in by_group]
-        by_others = SampleController.get_samples_shared_by_users_to_user(user_id)
-        by_others = [dict(row._mapping) for row in by_others]
-        o2_list = {"by_owner": being_owner,
-                   "by_group": by_group,
-                   "shared": by_others
-                   }
+        result = SampleController.get_samples_shared_with_user(user_id)
     else:
         raise Exception(f"Table {table} not found")
 
-    return Response(response=json.dumps(o2_list, default=str),
+    return Response(response=json.dumps(result, default=serialize_datetime),
                     status=200,
                     mimetype="application/json")
 
@@ -257,7 +240,7 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
 # Experiment handling
 # ##############################################################
 # To handle an experiment, a project must be provided, because the project is the container of the experiment.
-# Also an user must be provided, because the user is the owner of the experiment.
+# Also, a user must be provided, because the user is the owner of the experiment.
 @app.route('/experiment/<project_id>', methods=['GET', 'POST'])
 @wrap_error
 @limiter.limit("100/minute")
@@ -273,9 +256,8 @@ def create_experiment(params: dict, project_id: any, **kwargs):
 
     if request.method == 'GET':
         log.info(f'Request received for list of experiments related to user {user_id =} and {project_id =}')
-        resp = [exp.as_dict() for exp in ExperimentController.get_by_project(user_id, project_id)]
-        # message = json.dumps(resp, default=serialize_datetime)
-        message = json.dumps(resp, default=str)
+        resp = ExperimentController.get_by_project(user_id, project_id)
+        message = json.dumps(resp, default=serialize_datetime)
         result_status = 200
     elif request.method == 'POST':
         log.info(f'Request received for creating a new experiment for {user_id =} and {project_id =}')
@@ -286,7 +268,7 @@ def create_experiment(params: dict, project_id: any, **kwargs):
 
             message = {'status': 'success',
                        'message': 'Experiment created',
-                       'user': new_experiment.as_dict()
+                       'user': new_experiment
                        }
             result_status = 200
             log.info(f'Experiment with id "{new_experiment.id}" created')
@@ -296,8 +278,7 @@ def create_experiment(params: dict, project_id: any, **kwargs):
                        }
             result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -343,8 +324,7 @@ def experiment_handle(params: dict, id: Optional[int] = None, **kwargs):
                            }
                 result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -358,14 +338,12 @@ def experiment_handle(params: dict, id: Optional[int] = None, **kwargs):
 def experiment_edit(params: dict, id: Optional[int] = None, **kwargs):
     log.info(f'PUT/PATCH request received for experiment {id = } with {params = }')
 
-    result_status = 200
-    message = ''
     try:
         ExperimentController.update_experiment(id, params)
         updated = ExperimentController.get_experiment_by_id(id)
         message = {'status': 'success',
                    'message': 'Experiment updated',
-                   'experiment': updated.as_dict()
+                   'experiment': updated
                    }
         result_status = 200
         log.info(f'Experiment with id = {updated.id} updated')
@@ -376,8 +354,7 @@ def experiment_edit(params: dict, id: Optional[int] = None, **kwargs):
                    }
         result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -398,9 +375,8 @@ def create_project(params: dict, **kwargs):
 
     if request.method == 'GET':
         log.info('Request received for list of projects')
-        resp = [prj.as_dict() for prj in ProjectController.list_projects()]
-        # message = json.dumps(resp, default=serialize_datetime)
-        message = json.dumps(resp, default=str)
+        resp = ProjectController.list_projects()
+        message = json.dumps(resp, default=serialize_datetime)
         result_status = 200
     elif request.method == 'POST':
         log.info('Request received for creating a new project')
@@ -409,7 +385,7 @@ def create_project(params: dict, **kwargs):
 
             message = {'status': 'success',
                        'message': 'Project created',
-                       'project': new_project.as_dict()
+                       'project': new_project
                        }
             result_status = 200
             log.info(f'Project with id "{new_project.id}" created')
@@ -439,7 +415,7 @@ def project_handle(params: dict, id: Optional[int] = None, **kwargs):
     if request.method == 'GET':
         log.info(f'GET request received for project {id = } with {params = }')
         prj = ProjectController.get_project_by_id(id)
-        message = prj.as_dict()
+        message = prj
         result_status = 200
 
     if request.method == 'DELETE':
@@ -458,8 +434,7 @@ def project_handle(params: dict, id: Optional[int] = None, **kwargs):
                        }
             result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -481,7 +456,7 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
         updated = ProjectController.get_project_by_id(id)
         message = {'status': 'success',
                    'message': 'Project updated',
-                   'project': updated.as_dict()
+                   'project': updated
                    }
         result_status = 200
         log.info(f'Project with id = {updated.id} updated')
@@ -512,11 +487,10 @@ def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
     if request.method == 'GET':
         log.info(f'GET request received for experiments in project {id = } with {params = }')
         experiments = ExperimentController.get_by_project(id, params['project_id'])
-        message = [exp.as_dict() for exp in experiments]
+        message = experiments
         result_status = 200
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -831,12 +805,7 @@ def create_table(params: dict, table: str):
     else:
         raise Exception(f"Table {table} not found")
 
-    # if table == "users":
-    #     json_resp = json.dumps(new_creation.as_dict(), default=serialize_datetime)
-    # else:
-    #     json_resp = json.dumps(new_creation.as_dict())
-
-    json_resp = json.dumps(new_creation.as_dict(), default=str)
+    json_resp = json.dumps(new_creation, default=str)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -859,8 +828,7 @@ def update_table(params: dict, table: str):
     else:
         raise Exception(f"Table {table} not found")
 
-    # json_resp = json.dumps(modification.as_dict(), default=serialize_datetime)
-    json_resp = json.dumps(modification.as_dict(), default=str)
+    json_resp = json.dumps(modification, default=serialize_datetime)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -883,8 +851,7 @@ def query_table(params: dict, table: str, id: int):
     else:
         raise Exception(f"Table {table} not found")
 
-    # json_resp = json.dumps(answer.as_dict(), default=serialize_datetime)
-    json_resp = json.dumps(answer.as_dict(), default=str)
+    json_resp = json.dumps(answer, default=serialize_datetime)
     return Response(response=json_resp,
                     status=200,
                     mimetype="application/json")
@@ -894,21 +861,19 @@ def query_table(params: dict, table: str, id: int):
 @wrap_error
 def get_table_list(table: str):
     if table == "groups":
-        o2_list = GroupController.list_groups()
+        result = GroupController.list_groups()
     elif table == "users":
-        o2_list = UserController.list_users()
+        result = UserController.list_users()
     elif table == "experiments":
-        o2_list = ExperimentController.list_experiments(1)
+        result = ExperimentController.list_experiments(1)
     elif table == "projects":
-        o2_list = ProjectController.list_projects()
+        result = ProjectController.list_projects()
     elif table == "samples":
-        o2_list = SampleController.list_samples()
+        result = SampleController.list_samples()
     else:
         raise Exception(f"Table {table} not found")
 
-    result = [x.as_dict() for x in o2_list]
-    # return Response(response=json.dumps(result, default=serialize_datetime),
-    return Response(response=json.dumps(result, default=str),
+    return Response(response=json.dumps(result, default=serialize_datetime),
                     status=200,
                     mimetype="application/json")
 
