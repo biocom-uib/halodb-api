@@ -248,7 +248,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 DROP TABLE IF EXISTS `halodb`.`sample` ;
 
 CREATE TABLE IF NOT EXISTS `halodb`.`sample` (
-  `is_public` TINYINT NULL DEFAULT 0 COMMENT 'True if the sample is public. That means it can’t be modified. If a sample is made public, it is available for every user and group and for external visitors.',
+  `experiment_id` INT NULL DEFAULT NULL COMMENT 'Possible experiment',
   `id` INT NOT NULL AUTO_INCREMENT COMMENT 'Sample unique internal identifier',
   `experiment_id` INT NULL DEFAULT NULL COMMENT 'The sample belongs to an experiment',
   `name` VARCHAR(100) NULL DEFAULT NULL COMMENT 'Sample name',
@@ -399,7 +399,7 @@ DROP TABLE IF EXISTS `halodb`.`group_sharing_sample` ;
 CREATE TABLE IF NOT EXISTS `halodb`.`group_sharing_sample` (
   `group_id` INT(11) NOT NULL,
   `sample_id` INT(11) NOT NULL,
-  `access_mode` ENUM('read', 'readwrite') NULL DEFAULT NULL,
+  `relation` ENUM('read', 'readwrite') NULL,
   PRIMARY KEY (`group_id`, `sample_id`),
   INDEX `fk_groups_has_samples_samples1_idx` (`sample_id` ASC),
   INDEX `fk_groups_has_samples_groups1_idx` (`group_id` ASC),
@@ -611,7 +611,7 @@ DROP TABLE IF EXISTS `halodb`.`user_shared_sample` ;
 CREATE TABLE IF NOT EXISTS `halodb`.`user_shared_sample` (
   `user_id` INT(11) NOT NULL,
   `sample_id` INT(11) NOT NULL,
-  `access_mode` ENUM('read', 'readwrite') CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NULL DEFAULT 'read' COMMENT 'Describes the acces mode to the sample. \'owner\' is the propietary, can read and write and also delete the sample. \'read\' can read the data but no change it. \'readwrite\' can read and write but not delete.',
+  `relation` ENUM('owner', 'read', 'readwrite') CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NULL DEFAULT 'read' COMMENT 'Describes the acces mode to the sample. \'owner\' is the propietary, can read and write and also delete the sample. \'read\' can read the data but no change it. \'readwrite\' can read and write but not delete.',
   PRIMARY KEY (`user_id`, `sample_id`),
   INDEX `fk_users_has_samples_samples1_idx` (`sample_id` ASC),
   INDEX `fk_users_has_samples_users1_idx` (`user_id` ASC),
@@ -665,7 +665,7 @@ USE `halodb`$$
 CREATE DEFINER=`halodb`@`%` PROCEDURE `get_samples_available`(IN userId INT)
 BEGIN
 WITH relations AS (
-SELECT 
+SELECT
     sa.id,
     MAX(sa.public) AS public,
     MAX(sa.owned) AS owned,
@@ -683,8 +683,8 @@ SELECT
         False AS shared_by_others,
        'read' AS access_mode,
 		NULL AS group_relation,
-		NULL AS group_id, 
-		NULL AS group_name, 
+		NULL AS group_id,
+		NULL AS group_name,
 		s.id
 	FROM sample AS s
 	WHERE is_public=True
@@ -693,7 +693,7 @@ UNION ALL
 		False AS public,
 		True AS owned,
         False AS shared_by_group,
-        False AS shared_by_others, 
+        False AS shared_by_others,
 		CASE WHEN s.is_public THEN 'read' ELSE 'readwrite' END AS access_mode,
 		NULL AS group_relation,
 		NULL AS group_id,
@@ -706,14 +706,14 @@ UNION ALL
 		False AS public,
 		False AS owned,
         True AS shared_by_group,
-        False AS shared_by_others,  
+        False AS shared_by_others,
         CASE WHEN s.is_public THEN 'read' WHEN s.user_id = userId THEN 'readwrite' ELSE gs.access_mode END AS access_mode,
         ug.relation AS group_relation,
         g.id AS group_id,
         g.name AS group_name,
         s.id
-        FROM `halodb`.`group` AS g 
-			JOIN `halodb`.`user_has_group` AS ug ON g.id = ug.group_id 
+        FROM `halodb`.`group` AS g
+			JOIN `halodb`.`user_has_group` AS ug ON g.id = ug.group_id
 			JOIN `halodb`.`group_sharing_sample` AS gs ON ug.group_id = gs.group_id
 			JOIN `halodb`.`sample` AS s ON gs.sample_id = s.id
 	WHERE ug.user_id = userId
@@ -724,9 +724,9 @@ UNION ALL
         False AS shared_by_group,
         True AS shared_by_others,
         CASE WHEN s.is_public THEN 'read' WHEN s.user_id = userId THEN 'readwrite' ELSE uss.access_mode END AS access_mode,
-        NULL AS group_relation, 
-        NULL AS group_id, 
-        NULL AS group_name, 
+        NULL AS group_relation,
+        NULL AS group_id,
+        NULL AS group_name,
         s.id
 		FROM sample s
 			JOIN user_shared_sample uss ON s.id = uss.sample_id
