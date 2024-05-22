@@ -15,6 +15,7 @@ from api import log
 from api.auth import required_token, verify_token
 from api.db.db import SQLALCHEMY_DATABASE_URI, DatabaseInstance
 from api.decorators import wrap_error, get_params, log_params
+from api.utils import to_dict
 
 # from api.db.models  # Do not import yet, the database must be initialized first
 
@@ -549,7 +550,33 @@ def upload_sample(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@app.route('/query/sample/<id_sample>/<input_type>/', methods=['GET'])
+def get_user_and_sample_id_by_uuid(uid, id_sample):
+    """
+    Given a user uid and a sample id, return the user id and the sample.
+    if the sample can be accessed by the user.
+
+    :param uid: the uid of the user
+    :param id_sample: the id of the sample
+    :return:
+    """
+    user = UserController.get_user_by_uid(uid)
+    if user is None:
+        abort(400, f'User with uid {uid} not found')
+    else:
+        user_id = user.id
+
+    sample: Sample = SampleController.get_sample_by_id(id_sample)
+
+    if sample is None:
+        abort(400, f'Sample with id {id_sample} not found')
+
+    if sample.user_id != user_id:
+        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+
+    return user_id, sample
+
+
+@app.route('/query/sample/<int:id_sample>/<input_type>/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
 @get_params
@@ -558,20 +585,17 @@ def upload_sample(params: dict, **kwargs):
 def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
     log.info('Request received for uploading a sample')
     uid: str = kwargs['uid']
-    user_id = UserController.get_user_by_uid(uid).id
 
-    sample: Sample = SampleController.get_sample_by_id(id_sample)
-    if sample is None:
-        abort(400, f'Sample with id {id_sample} not found')
-
-    if sample.user_id != user_id:
-        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
-
-    filename, filedata = sample.get_file_data(input_type)
-    return send_file(filedata, download_name=filename)
+    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+    access = SampleController.get_access_mode(user_id, id_sample)
+    if access is not None:
+        filename, filedata = sample.get_file_data(input_type)
+        return send_file(filedata, download_name=filename)
+    else:
+        abort(403, f'User {user_id} cannot access the sample {id_sample}')
 
 
-@app.route('/upload/sample/<id_sample>', methods=['PUT', 'PATCH'])
+@app.route('/upload/sample/<int:id_sample>', methods=['PUT', 'PATCH'])
 @wrap_error
 @limiter.limit("100/minute")
 @get_params
@@ -580,14 +604,13 @@ def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
 def update_fields_sample(params: dict, id_sample: int, **kwargs):
     log.info('Request received for update a sample')
     uid: str = kwargs['uid']
-    user_id = UserController.get_user_by_uid(uid).id
 
-    sample: Sample = SampleController.get_sample_by_id(id_sample)
-    if sample is None:
-        abort(400, f'Sample with id {id_sample} not found')
+    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
 
-    if sample.user_id != user_id:
-        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+    access = SampleController.get_access_mode(user_id, id_sample)
+    if access is None or access != 'readwrite':
+        abort(403, f"User {user_id} doesn't have the privileges to modify the sample {id_sample}")
 
     # The fields related to the files are treated in a special way.
     # Then, they are not included in the creation of the sample.
@@ -619,12 +642,12 @@ def update_fields_sample(params: dict, id_sample: int, **kwargs):
                     mimetype="application/json")
 
 
-@app.route('/upload/sample/<id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
-#@wrap_error
-#@limiter.limit("100/minute")
-#@get_params
-#@log_params
-#@required_token
+@app.route('/upload/sample/<int:id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
+@wrap_error
+# @limiter.limit("100/minute")
+# @get_params
+# @log_params
+# @required_token
 def upload_sample_file(id_sample: int, input_type: str):
     log.info('Request received for uploading a sample file')
     try:
@@ -644,14 +667,11 @@ def upload_sample_file(id_sample: int, input_type: str):
         decoded_token = verify_token(token.split(' ')[1])
         uid = decoded_token['uid']
         # ###########################
-        user_id = UserController.get_user_by_uid(uid).id
 
-        sample: Sample = SampleController.get_sample_by_id(id_sample)
-        if sample is None:
-            abort(400, f'Sample with id {id_sample} not found')
-
-        if sample.user_id != user_id:
-            abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+        user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+        access = SampleController.get_access_mode(user_id, id_sample)
+        if access is None or access != 'readwrite':
+            abort(403, f"User {user_id} doesn't have the privileges to modify the sample {id_sample}")
 
         SampleController.update_file(id_sample, input_type, filename, file)
         message = {'status': 'success',
@@ -664,36 +684,9 @@ def upload_sample_file(id_sample: int, input_type: str):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=str),
+    return Response(response=json.dumps(message, default=serialize_datetime()),
                     status=result_status,
                     mimetype="application/json")
-
-
-@required_token
-def upload_test():
-    log.info('Request received for uploading a sample')
-
-    # check if the post request has the file part
-    if 'file' not in request.files:
-        return make_response(({
-                                  'status': 'error',
-                                  'message': 'the request does not contain a file'
-                              }, 400))
-
-    file = request.files['file']
-
-    # If the user does not select a file, the browser submits an
-    # empty file without a filename.
-    if file.filename == '':
-        return make_response(({
-                                  'status': 'error',
-                                  'message': 'file was not selected'
-                              }, 400))
-
-    filename = secure_filename(file.filename)
-    log.info(f'Secured filename: {filename}')
-    # file.save(os.path.join(UPLOADS_DIR, filename))
-    return make_response({'status': 'success'})
 
 
 @app.route('/query/sample_list/', methods=['GET'])
@@ -703,34 +696,39 @@ def upload_test():
 # @log_params
 # @required_token
 def get_sample_list():
-    log.info('Request received for list of samples')
-    random.seed()
-    start = 5
-    end = 11 + random.randint(0, 10)
-    indexes = list(range(start, end))
-    random.shuffle(indexes)
-
-    file = os.path.join(app.config['static_folder'], mocked_sample_file)
-    with open(file, 'r') as json_file:
-        sample = json.load(json_file)
-
-    samples = [sample.copy() for idx in indexes]
-    for idx in range(len(indexes)):
-        samples[idx]['id'] = indexes[idx]
-        samples[idx]['name'] = samples[idx]['name'] + f'Sample_{indexes[idx]}'
-
-    return Response(json.dumps(samples), mimetype="application/json")
+    log.info('Request received for list of public samples')
+    samples = SampleController.list_public_samples()
+    return Response(response=json.dumps(samples, default=serialize_datetime),
+                    status=200,
+                    mimetype="application/json")
 
 
-@app.route('/query/sample/<id_sample>/', methods=['GET'])
+@app.route('/query/sample/<int:id_sample>/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
-# @get_params
-# @log_params
-# @required_token
-def get_sample(id_sample: str):
-    log.info(f'Requested sample with {id_sample = }')
-    return send_from_directory(app.config['static_folder'], mocked_sample_file)
+@get_params
+@log_params
+@required_token
+def get_sample(params: dict, id_sample: int, **kwargs):
+    uid: str = kwargs['uid']
+
+    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+
+    access = SampleController.get_access_mode(user_id, id_sample)
+    if access is None:
+        abort(403, f"User {user_id} doesn't have the privileges to get data from sample {id_sample}")
+
+    log.info(f'user with {uid = } has requested sample with {id_sample = }')
+
+    message = {'status': 'success',
+               'sample': sample.as_dict()
+               }
+    result_status = 200
+    return Response(response=json.dumps(message, default=serialize_datetime),
+                    status=result_status,
+                    mimetype="application/json")
+
+    # return send_from_directory(app.config['static_folder'], mocked_sample_file)
 
 
 # ##############################################################

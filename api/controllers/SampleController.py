@@ -20,7 +20,9 @@ class SampleController:
     def get_sample_by_id(cls, sample_id: int):
         with DatabaseInstance.get().session() as session:
             stmt = select(Sample).filter_by(id=sample_id)
-            sample = session.execute(stmt).first()[0]
+            sample = session.execute(stmt).first()
+            if sample is not None:
+                sample = sample[0]
 
         return sample
 
@@ -129,3 +131,19 @@ class SampleController:
     @classmethod
     def list_samples(cls):
         return to_dict(Sample.query.all())
+
+    @classmethod
+    def list_public_samples(cls):
+        samples = Sample.query.filter_by(is_public=True).all()
+        samples = [sample.as_dict() for sample in samples]
+        return samples
+
+    @classmethod
+    def get_access_mode(cls, user_id, sample_id: int):
+        accessible_list = cls.get_samples_shared_with_user(user_id)
+        for sample in accessible_list:
+            if sample['id'] == sample_id:
+                return sample['access_mode']
+        return None
+
+
