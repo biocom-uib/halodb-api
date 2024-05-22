@@ -206,31 +206,39 @@ def user_edit(params: dict, **kwargs):
 @app.route('/user/list/<string:table>/', methods=['GET'])
 @get_params
 @wrap_error
-@required_token
+# @required_token
 def get_table_list_by_user(params: dict, table: str, **kwargs):
     """
     Given a user id and a related element (group, experiment, project or sample), return the list of elements related
-     to the user.
+     to the user. If no valid token, and the query is for samples, the list of public samples is returned.
     :param params:
     :param id: the user id.
     :param table: the table to get the related data.
-    :return: the list of elements of the table related to the user.
+    :return: the list of elements of the table related to the user. Or the list of public samples
     """
-    uid: str = kwargs['uid']
-    user_id = UserController.get_user_by_uid(uid).id
-
-    if table == "groups":
-        result = GroupController.get_groups_by_user(user_id)
-    # elif table == "users":
-    #     result = UserController.get_users_by_user(user_id)
-    elif table == "experiments":
-        result = ExperimentController.get_experiments_by_user(user_id)
-    elif table == "projects":
-        result = ProjectController.get_projects_by_user(user_id)
-    elif table == "samples":
-        result = SampleController.get_samples_shared_with_user(user_id)
+    uid = get_uid_from_request(False)
+    if uid is None:
+        if table == 'samples':
+            log.info('Request received for list of public samples')
+            result = SampleController.list_public_samples()
+        else:
+            abort(403, "No token provided")
     else:
-        raise Exception(f"Table {table} not found")
+        # uid: str = kwargs['uid']
+        user_id = UserController.get_user_by_uid(uid).id
+
+        if table == "groups":
+            result = GroupController.get_groups_by_user(user_id)
+        # elif table == "users":
+        #     result = UserController.get_users_by_user(user_id)
+        elif table == "experiments":
+            result = ExperimentController.get_experiments_by_user(user_id)
+        elif table == "projects":
+            result = ProjectController.get_projects_by_user(user_id)
+        elif table == "samples":
+            result = SampleController.get_samples_shared_with_user(user_id)
+        else:
+            abort(405, f"Table {table} not found")
 
     return Response(response=json.dumps(result, default=serialize_datetime),
                     status=200,
@@ -642,6 +650,24 @@ def update_fields_sample(params: dict, id_sample: int, **kwargs):
                     mimetype="application/json")
 
 
+def get_uid_from_request(required: bool = False):
+    """
+    Get the user id from the request. If the token is not present, return None if required is False, otherwise abort.
+    :param required: True if it's mandatory to have a valid token to proceed. In this case if no token is provided, abort.
+    :return: the uid or None if no token is provided and required is False.
+    """
+    token = request.headers.get('Authorization')
+    if not token:
+        if required:
+            abort(403, 'No token provided')
+        return None
+    if not token.startswith('Bearer '):
+        abort(403, 'Invalid token type')
+
+    decoded_token = verify_token(token.split(' ')[1])
+    return decoded_token['uid']
+
+
 @app.route('/upload/sample/<int:id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
@@ -656,17 +682,7 @@ def upload_sample_file(id_sample: int, input_type: str):
         file = request.files['file']
         filename = secure_filename(file.filename)
 
-        # ############################
-        # uid: str = params['uid']
-        # ############################
-        token = request.headers.get('Authorization')
-        if not token:
-            abort(403, 'No token provided')
-        if not token.startswith('Bearer '):
-            abort(403, 'Invalid token type')
-        decoded_token = verify_token(token.split(' ')[1])
-        uid = decoded_token['uid']
-        # ###########################
+        uid = get_uid_from_request(True)
 
         user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
         access = SampleController.get_access_mode(user_id, id_sample)
@@ -689,18 +705,18 @@ def upload_sample_file(id_sample: int, input_type: str):
                     mimetype="application/json")
 
 
-@app.route('/query/sample_list/', methods=['GET'])
-@wrap_error
-@limiter.limit("100/minute")
-# @get_params
-# @log_params
-# @required_token
-def get_sample_list():
-    log.info('Request received for list of public samples')
-    samples = SampleController.list_public_samples()
-    return Response(response=json.dumps(samples, default=serialize_datetime),
-                    status=200,
-                    mimetype="application/json")
+# @app.route('/query/sample_list/', methods=['GET'])
+# @wrap_error
+# @limiter.limit("100/minute")
+# # @get_params
+# # @log_params
+# # @required_token
+# def get_sample_list():
+#    log.info('Request received for list of public samples')
+#    samples = SampleController.list_public_samples()
+#    return Response(response=json.dumps(samples, default=serialize_datetime),
+#                     status=200,
+#                     mimetype="application/json")
 
 
 @app.route('/query/sample/<int:id_sample>/', methods=['GET'])
