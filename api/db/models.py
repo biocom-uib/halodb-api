@@ -699,19 +699,4 @@ class UserSharedSample(HaloDatabaseInstanceModel):
     def __str__(self):
         return f'<UserSharedSample {self.user_id} {self.sample_id}>'
 
-    @staticmethod
-    def get(user_id, sample_id):
-        return UserSharedSample.query.get((user_id, sample_id))
 
-    @staticmethod
-    def set(user_id, sample_id):
-        user_shared_sample = UserSharedSample.query.get((user_id, sample_id))
-        user_shared_sample.user_id = user_id
-        user_shared_sample.sample_id = sample_id
-        DatabaseInstance.get().session().commit()
-
-    @staticmethod
-    def delete(user_id, sample_id):
-        user_shared_sample = UserSharedSample.query.get((user_id, sample_id))
-        DatabaseInstance.get().session().delete(user_shared_sample)
-        DatabaseInstance.get().session().commit()

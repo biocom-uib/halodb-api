@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import select
 
 from api.db.db import DatabaseInstance
-from api.db.models import Sample
+from api.db.models import Sample, UserSharedSample, Group, GroupSharingSample, UserHasGroup
 from api.utils import convert_to_dict, to_dict
 
 
@@ -132,10 +132,22 @@ class SampleController:
     def list_samples(cls):
         return to_dict(Sample.query.all())
 
+    __extra_headers__ = ['public', 'owned', 'shared_by_group', 'shared_by_others', 'access_mode',
+                         'group_relation', 'group_id', 'group_name']
+    __extra_values__ = [1, 0, 0, 0, 'read', None, None, None]
+
+    @staticmethod
+    def merge_extra_fields(sample):
+        keys = list(sample.keys())
+        values = list(sample.values())
+        merged_keys = SampleController.__extra_headers__ + keys
+        merged_values = SampleController.__extra_values__ + values
+        return convert_to_dict(merged_values, merged_keys)
+
     @classmethod
     def list_public_samples(cls):
         samples = Sample.query.filter_by(is_public=True).all()
-        samples = [sample.as_dict() for sample in samples]
+        samples = [cls.merge_extra_fields(sample.as_dict()) for sample in samples]
         return samples
 
     @classmethod
@@ -146,4 +158,125 @@ class SampleController:
                 return sample['access_mode']
         return None
 
+    @classmethod
+    def make_public(cls, sample_id, owner):
+        with DatabaseInstance.get().session() as session:
+            try:
+                sample = session.query(Sample).filter_by(id=sample_id).first()
+
+                if sample is None:
+                    raise Exception("Sample not found")
+
+                if sample.user_id != owner:
+                    raise Exception("User is not the owner of the sample")
+
+                setattr(sample, 'is_public', 1)
+
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    @classmethod
+    def share_sample_user(cls, owner: int, sample_id: int, user_id: int, readwrite: bool):
+        with DatabaseInstance.get().session() as session:
+            try:
+                sample = Sample.query.filter_by(id=sample_id).first()
+                # stmt = select(Sample).filter_by(id=sample_id)
+                # sample = session.execute(stmt).first()
+                if sample is None:
+                    raise Exception("Sample not found")
+
+                if sample.user_id != owner:
+                    raise Exception("User is not the owner of the sample")
+
+                shared_sample = session.query(UserSharedSample).filter_by(sample_id=sample_id, user_id=user_id).first()
+                if shared_sample is None:
+                    shared_sample = UserSharedSample()
+                    shared_sample.sample_id = sample_id
+                    shared_sample.user_id = user_id
+                    shared_sample.access_mode = "readwrite" if readwrite else "read"
+                    session.add(shared_sample)
+                else:
+                    setattr(shared_sample, 'access_mode', 'readwrite' if readwrite else 'read')
+
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    @classmethod
+    def unshare_sample_user(cls, sample_id, user_id):
+        with DatabaseInstance.get().session() as session:
+            try:
+                shared_sample = session.query(UserSharedSample).filter_by(sample_id=sample_id, user_id=user_id).first()
+                if shared_sample is None:
+                    raise Exception(f"User {user_id} doesn't have access to sample {sample_id}")
+
+                session.delete(shared_sample)
+
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    @classmethod
+    def verify_relation(cls, owner, sample_id, group_id):
+        sample = Sample.query.filter_by(id=sample_id).first()
+        if sample is None:
+            raise Exception(f"Sample {sample_id} not found")
+
+        if sample.user_id != owner:
+            raise Exception(f"User {owner} is not the owner of the sample")
+
+        group = Group.query.filter_by(id=group_id).first()
+        if group is None:
+            raise Exception(f"The group {group_id} doesn't exist")
+
+        owner_group = UserHasGroup.query.filter_by(user_id=owner, group_id=group_id).first()
+        if owner_group is None or owner_group.relation != 'owner':
+            raise Exception(f"User {owner} doesn't have the right privileges to share "
+                            f"or remove the sample {sample_id}  to the group {group}")
+
+    @classmethod
+    def share_sample_group(cls, owner, sample_id, group_id, readwrite):
+        with DatabaseInstance.get().session() as session:
+            try:
+                cls.verify_relation(owner, sample_id, group_id)
+
+                shared_sample = session.query(GroupSharingSample).filter_by(
+                    sample_id=sample_id, group_id=group_id).first()
+                if shared_sample is None:
+                    shared_sample = GroupSharingSample()
+                    shared_sample.sample_id = sample_id
+                    shared_sample.group_id = group_id
+                    shared_sample.access_mode = "readwrite" if readwrite else "read"
+                    session.add(shared_sample)
+                else:
+                    setattr(shared_sample, 'access_mode', 'readwrite' if readwrite else 'read')
+
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                raise e
+
+    @classmethod
+    def unshare_sample_group(cls, owner, sample_id, group_id):
+        with DatabaseInstance.get().session() as session:
+            try:
+                cls.verify_relation(owner, sample_id, group_id)
+
+                shared_sample = session.query(GroupSharingSample).filter_by(
+                    sample_id=sample_id, group_id=group_id).first()
+
+                if shared_sample is not None:
+                    session.delete(shared_sample)
+                    session.commit()
+                else:
+                    session.rollback()
+                    raise Exception(f"Sample {sample_id} isn't shared with group {group_id}")
+
+            except Exception as e:
+                session.rollback()
+                raise e
 
