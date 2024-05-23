@@ -578,8 +578,9 @@ def get_user_and_sample_id_by_uuid(uid, id_sample):
     if sample is None:
         abort(400, f'Sample with id {id_sample} not found')
 
-    if sample.user_id != user_id:
-        abort(403, f'User {user_id} is not the owner of the sample {id_sample}')
+    # access_mode = SampleController.get_access_mode(user_id, id_sample)
+    # if access_mode is None:
+    #    abort(403, f"User {user_id} doesn't have access to sample {id_sample}")
 
     return user_id, sample
 
@@ -600,7 +601,7 @@ def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
         filename, filedata = sample.get_file_data(input_type)
         return send_file(filedata, download_name=filename)
     else:
-        abort(403, f'User {user_id} cannot access the sample {id_sample}')
+        abort(403, f'User {user_id} has no access the sample {id_sample}')
 
 
 @app.route('/upload/sample/<int:id_sample>', methods=['PUT', 'PATCH'])
@@ -700,7 +701,7 @@ def upload_sample_file(id_sample: int, input_type: str):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime()),
+    return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
 
@@ -802,18 +803,263 @@ def get_table_data(table: str):
 
 
 # ##############################################################
+# Sharing samples handling
+# ##############################################################
+
+# ##########################
+# PUBLIC
+# ##########################
+
+@app.route('/share/public/<int:sample_id>', methods=['PUT', 'PATCH'])
+@wrap_error
+@limiter.limit("100/minute")
+#@get_params
+#@log_params
+@required_token
+def make_sample_public(sample_id: int, **kwargs):
+    """
+    Make public a sample
+    :param params:
+    :param sample_id: the sample identifier.
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        user_id = UserController.get_user_by_uid(uid).id
+
+        log.info(f"User {user_id} makes public sample {sample_id}")
+        SampleController.make_public(sample_id, user_id)
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+
+# ##########################
+# USERS
+# ##########################
+@app.route('/share/user/', methods=['POST'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def share_sample_user(params: dict, **kwargs):
+    """
+    Share a sample with another user. An user, owner of the sample, shares the sample with
+    another user. A sample_id and an user_id (the invited user) are needed, also the access mode, that can be
+    read o readwrite.
+    The data is received in a json format, with the following fields:
+
+        * id_sample: the sample identifier, the integer unique identifier of the sample.
+        * user_id: the user with which share the sample.
+        * readwrite: True if the sample can be modified by user_id.
+
+    :param params:
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        owner = UserController.get_user_by_uid(uid).id
+
+        sample_id = params.get('sample_id', None)
+        if sample_id is None:
+            abort(400, 'No sample id provided')
+
+        user_id = params.get('user_id', None)
+        if user_id is None:
+            abort(400, 'No invited user provided')
+
+        readwrite = params.get('readwrite', False)
+
+        log.info(f"User {owner} share sample {sample_id} with user {user_id} with "
+                 f"{'readwrite' if readwrite else 'readonly'} access")
+        SampleController.share_sample_user(owner, sample_id, user_id, readwrite)
+
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+@app.route('/share/user/<int:sample_id>/<int:id_user>', methods=['DELETE'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def unshare_sample_other_user(params: dict, sample_id: int, id_user: int, **kwargs):
+    """
+    A user, the owner of a sample, stops sharing the sample with another user. A
+    sample_id and an id_user (the invited user) are needed.
+    :param params:
+    :param sample_id: the sample identifier, the integer unique identifier of the sample.
+    :param id_user: the user with which share the sample.
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        owner = UserController.get_user_by_uid(uid).id
+
+        # sample_id = params['sample_id']
+        if sample_id is None:
+            abort(400, 'No sample id provided')
+
+        # id_user = params['user_id']
+        if id_user is None:
+            abort(400, 'No invited user provided')
+
+        log.info(f"User {owner} stops sharing sample {sample_id} with user {id_user}")
+        SampleController.unshare_sample_user(sample_id, id_user)
+
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+@app.route('/share/user/<int:sample_id>', methods=['DELETE'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def unshare_sample_user(params: dict, sample_id: int, **kwargs):
+    """
+    Unshare a sample which has been shared with the current user by another user.
+    :param params:
+    :param sample_id: the sample identifier.
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        user_id = UserController.get_user_by_uid(uid).id
+
+        log.info(f"User {user_id} doesn't have interest on sample {sample_id}")
+        SampleController.unshare_sample_user(sample_id, user_id)
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+# ##############
+# GROUPS
+# ##############
+
+@app.route('/share/group/', methods=['POST'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def share_sample_group(params: dict, **kwargs):
+    """
+    Share a sample with a group. A user, owner of the sample, shares the sample with
+    a group. A sample_id and a group_id are needed.
+
+    The data has to be in json format with the fields:
+    * sample_id: the sample identifier.
+    * group_id: the user to share the sample.
+    * readwrite: True if the sample can be modified by the members of the group.
+
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        owner = UserController.get_user_by_uid(uid).id
+
+        sample_id = params.get('sample_id', None)
+        if sample_id is None:
+            abort(400, 'No sample id provided')
+
+        group_id = params.get('group_id', None)
+        if group_id is None:
+            abort(400, 'Group not provided')
+
+        readwrite = params.get('readwrite', 0)
+
+        log.info(f"User {owner} share sample {sample_id} with group {group_id} with "
+                 f"{'readwrite' if readwrite else 'readonly'} access")
+        SampleController.share_sample_group(owner, sample_id, group_id, readwrite)
+
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+@app.route('/share/group/<int:sample_id>/<int:group_id>', methods=['DELETE'])
+@wrap_error
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def unshare_sample_group(params: dict, sample_id: int, group_id: int, **kwargs):
+    """
+    Stops sharing the sample with a group. A sample_id and a group_id are needed.
+    :param params:
+    :param sample_id: the sample identifier.
+    :param group_id: the user to share the sample.
+    :return:
+    """
+    try:
+        uid = kwargs['uid']
+        owner = UserController.get_user_by_uid(uid).id
+
+        log.info(f"User {owner} stops sharing sample {sample_id} with group {group_id}")
+
+        SampleController.unshare_sample_group(owner, sample_id, group_id)
+
+        result = {"message": "OK"}
+    except Exception as e:
+        result = {"message": f"ERROR: {e}"}
+
+    return Response(response=json.dumps(result),
+                    status=200,
+                    mimetype="application/json")
+
+
+# ##############################################################
+#  End of sharing samples handling
+# ##############################################################
+
+# ##############################################################
 # Group invitation handling
 # ##############################################################
-@app.route('/group/invitation/<int:user_id>/<int:group>', methods=['PUT', 'PATCH', 'DELETE'])
+@app.route('/group/invitation/<int:group>', methods=['PUT', 'PATCH', 'DELETE'])
 @wrap_error
-def accept(user_id: int, group: int):
+@limiter.limit("100/minute")
+@get_params
+@log_params
+@required_token
+def accept(params: dict, group: int, **kwargs):
     """
     Accept or reject an invitation to join a group
-    :param user_id: the user unique identifier
+    :param params:
     :param group: the group identifier
     :return:
     """
     try:
+        uid = kwargs['uid']
+        user_id = UserController.get_user_by_uid(uid).id
+
         answer = request.method != 'DELETE'
 
         log.info(f"The invitation request to user {user_id} to join {group} is {'accept' if answer else 'reject'}ed")
@@ -827,17 +1073,20 @@ def accept(user_id: int, group: int):
                     mimetype="application/json")
 
 
-@app.route('/group/invite/<int:owner>/<int:invited>/<int:group>', methods=['POST'])
+@app.route('/group/invite/<int:invited>/<int:group>', methods=['POST'])
 @wrap_error
-def invite(owner: int, invited: int, group: int):
+def invite(params: dict, invited: int, group: int, **kwargs):
     """
     Invite a user to join a group
-    :param owner: the owner of the group
+    :param params:
     :param invited: the user to invite
     :param group: the group to join
     :return:
     """
     try:
+        uid = kwargs['uid']
+        owner = UserController.get_user_by_uid(uid).id
+
         log.info(f"Invitation request from user {owner} to user {invited} to join group {group}")
         GroupController.invite(owner, invited, group)
         result = {"message": "OK"}
