@@ -3,7 +3,8 @@ import datetime
 from sqlalchemy import select
 
 from api.db.db import DatabaseInstance
-from api.db.models import Sample, UserSharedSample, Group, GroupSharingSample, UserHasGroup
+from api.db.models import Sample, UserSharedSample, Group, GroupSharingSample, UserHasGroup, Temperature, Ph, Salinity, \
+    Method, Oxygen, Fraction, Target, Extraction, Assembly, Sequencing, Binning
 from api.utils import convert_to_dict, to_dict
 
 
@@ -35,12 +36,86 @@ class SampleController:
         return samples
 
     @classmethod
+    def filter_description_fields(cls, sample):
+        complementaries = {
+            # "publication": "publication",
+            # "hkgn": "",
+            "method": "method",
+            "dnae": "extraction",
+            "asem": "assembly",
+            "seqt": "sequencing",
+            "bins": "binning",
+            "orel": "oxygen",
+            "sfrac": "fraction",
+            "target": "target"
+        }
+        supplementaries = {
+            "temc": {"field": "temo", "table": "temperature"},
+            "phca": {"field": "phop", "table": "ph"},
+            "salc": {"field": "salo", "table": "salinity"}
+        }
+        #with DatabaseInstance.get() as session:
+        for key, value in complementaries.items():
+            if sample[key] is not None:
+                # stmt = select(value).filter_by(id=sample[key])
+                # result = session.execute(stmt).first()
+                # if result is not None:
+                #     sample[key] = result[0]
+                if value == 'method':
+                    element = Method.query.filter_by(id=sample[key]).first()
+                elif value == 'extraction':
+                    element = Extraction.query.filter_by(id=sample[key]).first()
+                elif value == 'assembly':
+                    element = Assembly.query.filter_by(id=sample[key]).first()
+                elif value == 'sequencing':
+                    element = Sequencing.query.filter_by(id=sample[key]).first()
+                elif value == 'binning':
+                    element = Binning.query.filter_by(id=sample[key]).first()
+                elif value == 'oxygen':
+                    element = Oxygen.query.filter_by(id=sample[key]).first()
+                elif value == 'fraction':
+                    element = Fraction.query.filter_by(id=sample[key]).first()
+                elif value == 'target':
+                    element = Target.query.filter_by(id=sample[key]).first()
+                elif value == 'target':
+                    element = Target.query.filter_by(id=sample[key]).first()
+                else:
+                    element = None
+
+                if element is not None:
+                    sample[key] = element.description
+                else:
+                    sample[key] = None
+        for key, value in supplementaries.items():
+            if sample[value['field']] is not None:
+                # stmt = select(value['table']).filter_by(vmin<=sample[key] and sample[key]<=vmax)
+                #  result = session.execute(stmt).first()
+                # if result is not None:
+                #    sample[key] = result[0]
+                if value['table'] == 'temperature':
+                    element = Temperature.query.filter(Temperature.vmin < value, value <= Temperature.vmax).first()
+                elif value['table'] == 'ph':
+                    element = Ph.query.filter(Ph.vmin < value, value <= Ph.vmax).first()
+                elif value['table'] == 'salinity':
+                    element = Salinity.query.filter(Salinity.vmin < value, value <= Salinity.vmax).first()
+                else:
+                    element = None
+
+                if element is not None:
+                    sample[key] = element.description
+                else:
+                    sample[key] = None
+        return sample
+
+    @classmethod
     def get_samples_shared_with_user(cls, user_id):
         with DatabaseInstance.get().cursor() as cursor:
             cursor.callproc("get_samples_available", [user_id])
             column_names = [desc[0] for desc in cursor.description]
             result = list(cursor.fetchall())
-        data = [convert_to_dict(row, column_names) for row in result]
+
+        data = [cls.filter_description_fields(convert_to_dict(row, column_names)) for row in result]
+
         return data
 
     @classmethod
@@ -147,7 +222,7 @@ class SampleController:
     @classmethod
     def list_public_samples(cls):
         samples = Sample.query.filter_by(is_public=True).all()
-        samples = [cls.merge_extra_fields(sample.as_dict()) for sample in samples]
+        samples = [cls.filter_description_fields(cls.merge_extra_fields(sample.as_dict())) for sample in samples]
         return samples
 
     @classmethod

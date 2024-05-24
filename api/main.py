@@ -706,20 +706,6 @@ def upload_sample_file(id_sample: int, input_type: str):
                     mimetype="application/json")
 
 
-# @app.route('/query/sample_list/', methods=['GET'])
-# @wrap_error
-# @limiter.limit("100/minute")
-# # @get_params
-# # @log_params
-# # @required_token
-# def get_sample_list():
-#    log.info('Request received for list of public samples')
-#    samples = SampleController.list_public_samples()
-#    return Response(response=json.dumps(samples, default=serialize_datetime),
-#                     status=200,
-#                     mimetype="application/json")
-
-
 @app.route('/query/sample/<int:id_sample>/', methods=['GET'])
 @wrap_error
 @limiter.limit("100/minute")
@@ -836,6 +822,7 @@ def make_sample_public(sample_id: int, **kwargs):
     return Response(response=json.dumps(result),
                     status=200,
                     mimetype="application/json")
+
 
 # ##########################
 # USERS
