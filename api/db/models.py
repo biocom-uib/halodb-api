@@ -700,3 +700,18 @@ class UserSharedSample(HaloDatabaseInstanceModel):
         return f'<UserSharedSample {self.user_id} {self.sample_id}>'
 
 
+class Assembly(HaloDatabaseInstanceModel):
+    __table__ = DatabaseInstance.get().get_table('assembly')
+
+
+class Extraction(HaloDatabaseInstanceModel):
+    __table__ = DatabaseInstance.get().get_table('extraction')
+
+
+class Sequencing(HaloDatabaseInstanceModel):
+    __table__ = DatabaseInstance.get().get_table('sequencing')
+
+
+class Binning(HaloDatabaseInstanceModel):
+    __table__ = DatabaseInstance.get().get_table('binning')
+
