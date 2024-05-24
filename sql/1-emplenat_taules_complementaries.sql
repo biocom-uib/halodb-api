@@ -13,14 +13,14 @@ insert into method(description) values
 ("MiGA");
 
 
-insert into oxygen (relationship) values 
+insert into oxygen (description) values 
 ("Aerobic metabolism"), 
 ("Obligate Anaerobic metabolism"), 
 ("Facultative Anaerobic metabolism"), 
 ("Microarophiles"), 
 ("Aerotolerant anaerobes");
 
-insert into temperature (category, vmin, vmax) values 
+insert into temperature (description, vmin, vmax) values 
 ('Psychrophyles (-20ºC, 10ºC]',-20,10),
 ('Mesophiles (10ºC, 45ºC]',10,45),
 ('Moderate thermophiles (45ºC, 60ºC]',45,60),
@@ -28,7 +28,7 @@ insert into temperature (category, vmin, vmax) values
 ('Hyperthermophiles (80ºC, 122ºC)',80,122);
 
 
-insert into ph (category, vmin, vmax) values
+insert into ph (description, vmin, vmax) values
 ('Ultra acidic (-∞, 3.5]',-10000.0,3.5),
 ('Extremely acidic (3.5, 4.5]',3.5,4.5),
 ('Very strongly acidic (4.5, 5.0]',4.5,5.0),
@@ -43,7 +43,7 @@ insert into ph (category, vmin, vmax) values
 ('Hyper alkaline (10.5, +∞)',10.5,10000.0);
 
 
-insert into salinity (category, vmin, vmax) values
+insert into salinity (description, vmin, vmax) values
 ('Halotolerants (0%, 1%]',0.0,1.0),
 ('Slight halophiles (1%, 3%]',1.0,3.0),
 ('Moderate halophiles (3%, 15%]',3.0,15.0),
@@ -51,7 +51,7 @@ insert into salinity (category, vmin, vmax) values
 
 
 -- ######################################## 
--- insert into salinity (category) values
+-- insert into salinity (description) values
 -- ("Oligohaline [0.5‰, 5‰]"),
 -- ("Mesohaline (5‰, 18‰]"),
 -- ("Polyhaline (18‰, 30‰]"),
@@ -69,7 +69,7 @@ insert into salinity (category, vmin, vmax) values
 -- ("BSL-4");
 -- ########################################
 
-insert into fraction (name) values
+insert into fraction (description) values
 ("Genome"),                                    
 ("MAG"),
 ("SAG"),
@@ -93,7 +93,7 @@ insert into fraction (name) values
 
 
 
-insert into target (name) values
+insert into target (description) values
 ("gDNA (genomic DNA)"),
 ("Exome"),
 ("mtDNA (mitochondrial DNA)"),
@@ -104,7 +104,7 @@ insert into target (name) values
 ("RNA (total RNA)");
 
 
-insert into binning(name) values
+insert into binning(description) values
 ("MetaBAT"),
 ("MaxBin"),
 ("CONCOCT"),
@@ -117,7 +117,7 @@ insert into binning(name) values
 ("DAS Tool");
 
 
-insert into sequencing(name) values
+insert into sequencing(description) values
 ("FastQC"),
 ("Trimmomatic"),
 ("Cutadapt"),
@@ -138,7 +138,7 @@ insert into sequencing(name) values
 ("MetaGeneMark");
 
 
-insert into extraction(name) values
+insert into extraction(description) values
 ("LabKey"),
 ("Biotracker"),
 ("Benchling"),
@@ -153,7 +153,7 @@ insert into extraction(name) values
 ("Tecan");
 
 
-insert into assembly(name) values
+insert into assembly(description) values
 ("SPAdes"),
 ("Velvet"),
 ("ABySS"),

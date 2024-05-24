@@ -773,7 +773,7 @@ def get_classification_data(table: str, value: float):
     else:
         element = None
     if element is not None:
-        value = element.category
+        value = element.description
     else:
         value = None
     return jsonify(value)
@@ -836,8 +836,6 @@ def make_sample_public(sample_id: int, **kwargs):
     return Response(response=json.dumps(result),
                     status=200,
                     mimetype="application/json")
-
-
 
 # ##########################
 # USERS
