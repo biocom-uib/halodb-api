@@ -66,8 +66,10 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 
 # Define a custom function to serialize datetime objects
 def serialize_datetime(obj):
-    if isinstance(obj, (datetime.date, datetime.datetime)):
+    if isinstance(obj, (datetime.date, datetime.time, datetime.datetime)):
         return obj.isoformat()
+    elif isinstance(obj, datetime.timedelta):
+        return str(obj)
     elif isinstance(obj, decimal.Decimal):
         return str(obj)
     return obj
@@ -540,9 +542,10 @@ def upload_sample(params: dict, **kwargs):
             params['user_id'] = user_id
 
             sample_created = SampleController.create_sample(params)
+
             message = {'status': 'success',
                        'message': 'Sample created',
-                       'sample': sample_created
+                       'sample': SampleController.filter_description_fields(sample_created)
                        }
             result_status = 200
         except Exception as e:
@@ -646,7 +649,7 @@ def update_fields_sample(params: dict, id_sample: int, **kwargs):
             sample_updated = SampleController.update_sample(id_sample, params)
             message = {'status': 'success',
                        'message': 'Sample created',
-                       'sample': sample_updated
+                       'sample': SampleController.filter_description_fields(sample_updated)
                        }
             result_status = 200
         except Exception as e:

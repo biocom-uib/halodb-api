@@ -115,7 +115,9 @@ class SampleController:
             column_names = [desc[0] for desc in cursor.description]
             result = list(cursor.fetchall())
 
-        data = [cls.filter_description_fields(convert_to_dict(row, column_names)) for row in result]
+        data = [cls.filter_description_fields
+                (cls.merge_extra_fields
+                 (convert_to_dict(row, column_names))) for row in result]
 
         return data
 
@@ -127,11 +129,26 @@ class SampleController:
 
         return samples
 
+    __date_fields__ = ["dats",
+                       "dati"]
+    __time_fields__ = ["hocs"]
+
+    @classmethod
+    def fix_times(cls, data: dict):
+        for key in cls.__date_fields__:
+            if key in data.keys():
+                data[key] = datetime.datetime.strptime(data[key], '%d/%m/%Y')
+        for key in cls.__time_fields__:
+            if key in data.keys():
+                data[key] = datetime.datetime.strptime(data[key], '%H:%M:%S')
+
     @classmethod
     def create_sample(cls, data: dict):
         with DatabaseInstance.get().session() as session:
             try:
                 sample_to_create = Sample()
+                cls.fix_times(data)
+
                 sample_to_create.from_dict(data)
 
                 session.add(sample_to_create)
@@ -175,6 +192,9 @@ class SampleController:
                 if sample is None:
                     raise Exception("Sample not found")
                 sample_to_edit = sample[0]
+
+                cls.fix_times(new_data)
+
                 for key, value in new_data.items():
                     if Sample.valid_field(key):
                         setattr(sample_to_edit, key, value)
@@ -223,6 +243,7 @@ class SampleController:
     @classmethod
     def list_public_samples(cls):
         samples = Sample.query.filter_by(is_public=True).all()
+
         samples = [cls.filter_description_fields(cls.merge_extra_fields(sample.as_dict())) for sample in samples]
         return samples
 
