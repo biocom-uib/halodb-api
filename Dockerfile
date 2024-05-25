@@ -13,7 +13,6 @@ RUN pip3 install keyring keyrings.google-artifactregistry-auth
 
 # Install requirements
 COPY requirements.txt requirements.txt
-COPY credentials.json /opt/halodb-api/credentials.json
 RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /opt/halodb-api
