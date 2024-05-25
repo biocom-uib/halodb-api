@@ -2,6 +2,12 @@
 
 ## Setting up for development
 
+Starting from scratch, there are two options:
+
+1. Start with an empty database
+
+2. From existing data
+
 ### Option 1. Clean start
 
 The following directories are mounted as volumes and must to belong to the user 1021 and group 1002. Create and `chown 1021:1002` them first if they don't exist:
@@ -12,7 +18,17 @@ The following directories are mounted as volumes and must to belong to the user 
 
 In addition, the Firebase credentials JSON should be placed into `secrets/firebase_credentials.json`.
 
-### Option 2. From existing data.
+Therefore, to get the API running from scratch, the process is as follows:
+
+```bash
+cd halodb-api
+mkdir -p volumes/{mysql_data,tmp,uploads} secrets
+cp /path/to/firebase/credentials.json secrets/firebase_credentials.json
+sudo chown -R 1021:1002 volumes
+docker compose up --build
+```
+
+### Option 2. From existing data
 
 Alternatively, copy existing data from a running instance. It should contain the following data:
 
@@ -31,6 +47,16 @@ sudo tar --same-owner -xvf halodb-snapshot.tar.gz
 this case 1021:1002)
 
 When using a snapshot from production for development, remember to update the values of any passwords in docker-compose.override.yml with the corresponding values from the secrets directory.
+
+Summing up, to start an instance from an existing snapshot:
+
+```bash
+cd halodb-api
+sudo tar --same-owner -xvf /path/to/halodb_snapshot.tar.gz
+# remember to update docker-compose.override.yml with passwords from secrets
+vim docker-compose.override.yml
+docker compose up --build
+```
 
 ## Differences between development and production
 
