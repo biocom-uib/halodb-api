@@ -1,4 +1,5 @@
 import datetime
+import decimal
 
 
 def to_dict(rows):
@@ -30,5 +31,7 @@ def convert_to_dict(row, column_names):
 def valid_value(value):
     if isinstance(value, (datetime.date, datetime.datetime)):
         return value.isoformat()
+    elif isinstance(value, decimal.Decimal):
+        return str(value)
     else:
         return value

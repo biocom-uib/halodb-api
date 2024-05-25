@@ -54,7 +54,7 @@ class SampleController:
             "phca": {"field": "phop", "table": "ph"},
             "salc": {"field": "salo", "table": "salinity"}
         }
-        #with DatabaseInstance.get() as session:
+        # with DatabaseInstance.get() as session:
         for key, value in complementaries.items():
             if sample[key] is not None:
                 # stmt = select(value).filter_by(id=sample[key])
@@ -87,17 +87,18 @@ class SampleController:
                 else:
                     sample[key] = None
         for key, value in supplementaries.items():
+            v = sample[value['field']]
             if sample[value['field']] is not None:
-                # stmt = select(value['table']).filter_by(vmin<=sample[key] and sample[key]<=vmax)
+                # stmt = select(value['table']).filter_by(vmin<=v and v=vmax)
                 #  result = session.execute(stmt).first()
                 # if result is not None:
                 #    sample[key] = result[0]
                 if value['table'] == 'temperature':
-                    element = Temperature.query.filter(Temperature.vmin < value, value <= Temperature.vmax).first()
+                    element = Temperature.query.filter(Temperature.vmin < v, v <= Temperature.vmax).first()
                 elif value['table'] == 'ph':
-                    element = Ph.query.filter(Ph.vmin < value, value <= Ph.vmax).first()
+                    element = Ph.query.filter(Ph.vmin < v, v <= Ph.vmax).first()
                 elif value['table'] == 'salinity':
-                    element = Salinity.query.filter(Salinity.vmin < value, value <= Salinity.vmax).first()
+                    element = Salinity.query.filter(Salinity.vmin < v, v <= Salinity.vmax).first()
                 else:
                     element = None
 

@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import json
 import os
 import random
@@ -67,6 +68,8 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 def serialize_datetime(obj):
     if isinstance(obj, (datetime.date, datetime.datetime)):
         return obj.isoformat()
+    elif isinstance(obj, decimal.Decimal):
+        return str(obj)
     return obj
     # raise TypeError("Type not serializable")
 
@@ -590,13 +593,24 @@ def get_user_and_sample_id_by_uuid(uid, id_sample):
 @limiter.limit("100/minute")
 @get_params
 @log_params
-@required_token
+# @required_token
 def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
-    log.info('Request received for uploading a sample')
-    uid: str = kwargs['uid']
 
-    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
-    access = SampleController.get_access_mode(user_id, id_sample)
+    # uid: str = kwargs['uid']
+    uid = get_uid_from_request(False)
+
+    if uid is None:
+        log.info(f'Request received to get file {input_type} from {id_sample =} as public sample')
+        sample = SampleController.get_sample_by_id(id_sample)
+        if not sample.is_public:
+            abort(403, f"Sample {id_sample} is not public")
+        else:
+            access = "read"
+    else:
+        log.info(f'Request received  to get file {input_type} from sample {id_sample}')
+        user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+        access = SampleController.get_access_mode(user_id, id_sample)
+
     if access is not None:
         filename, filedata = sample.get_file_data(input_type)
         return send_file(filedata, download_name=filename)
@@ -711,20 +725,28 @@ def upload_sample_file(id_sample: int, input_type: str):
 @limiter.limit("100/minute")
 @get_params
 @log_params
-@required_token
+# @required_token
 def get_sample(params: dict, id_sample: int, **kwargs):
-    uid: str = kwargs['uid']
 
-    user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
+    # uid: str = kwargs['uid']
+    uid = get_uid_from_request(False)
 
-    access = SampleController.get_access_mode(user_id, id_sample)
-    if access is None:
-        abort(403, f"User {user_id} doesn't have the privileges to get data from sample {id_sample}")
+    if uid is None:
+        log.info(f'Request received to get {id_sample =} as public sample')
+        sample = SampleController.get_sample_by_id(id_sample)
+        if not sample.is_public:
+            abort(403, f"Sample {id_sample} is not public")
+    else:
+        user_id, sample = get_user_and_sample_id_by_uuid(uid, id_sample)
 
-    log.info(f'user with {uid = } has requested sample with {id_sample = }')
+        access = SampleController.get_access_mode(user_id, id_sample)
+        if access is None:
+            abort(403, f"User {user_id} doesn't have the privileges to get data from sample {id_sample}")
+
+        log.info(f'user with {uid = } has requested sample with {id_sample = }')
 
     message = {'status': 'success',
-               'sample': sample.as_dict()
+               'sample': SampleController.filter_description_fields(sample.as_dict())
                }
     result_status = 200
     return Response(response=json.dumps(message, default=serialize_datetime),
