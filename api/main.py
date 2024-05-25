@@ -65,21 +65,15 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 
 
 # Define a custom function to serialize datetime objects
-def serialize_datetime(obj):
-    if isinstance(obj, (datetime.date, datetime.time, datetime.datetime)):
-        return obj.isoformat()
-    elif isinstance(obj, decimal.Decimal):
-        return str(obj)
-    return obj
+def serialize_datetime(value):
+    if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
+        return value.isoformat()
+    elif isinstance(value, datetime.timedelta):
+        return str(value)
+    elif isinstance(value, decimal.Decimal):
+        return str(value)
+    return value
     # raise TypeError("Type not serializable")
-
-
-# class DateTimeEncoder(json.JSONEncoder):
-#    def default(self, o):
-#        if isinstance(o, (datetime.date, datetime.datetime)):
-#            return o.isoformat()
-
-#        return json.JSONEncoder.default(self, o)
 
 
 @app.route('/users/', methods=['GET'])
@@ -94,8 +88,8 @@ def users(params: dict, **kwargs):
     if request.method == 'GET':
         log.info('Request received for list of users')
         resp = UserController.list_users()
-        # message = json.dumps(resp, default=serialize_datetime)
-        message = json.dumps(resp, default=str)
+        message = json.dumps(resp, default=serialize_datetime)
+        # message = json.dumps(resp, default=str)
         result_status = 200
 
     return Response(response=message,
@@ -596,7 +590,6 @@ def get_user_and_sample_id_by_uuid(uid, id_sample):
 @log_params
 # @required_token
 def get_sample_file(params: dict, id_sample: int, input_type: str, **kwargs):
-
     # uid: str = kwargs['uid']
     uid = get_uid_from_request(False)
 
@@ -728,7 +721,6 @@ def upload_sample_file(id_sample: int, input_type: str):
 @log_params
 # @required_token
 def get_sample(params: dict, id_sample: int, **kwargs):
-
     # uid: str = kwargs['uid']
     uid = get_uid_from_request(False)
 
