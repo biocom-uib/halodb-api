@@ -8,21 +8,10 @@ from firebase_admin.auth import ExpiredIdTokenError, RevokedIdTokenError, Invali
 from google.oauth2 import id_token
 from google.auth.transport import requests
 
-from api.constants import FIREBASE_API_KEY, PROJECT_ID
+from api.config import FIREBASE_CREDENTIALS_FILE
 
 
-def get_config():
-    config = {
-        "apiKey": FIREBASE_API_KEY,
-        "authDomain": f"{PROJECT_ID}.firebaseapp.com",
-        "databaseURL": f"https://{PROJECT_ID}.firebaseio.com",
-        "projectId": PROJECT_ID,
-        "storageBucket": f"{PROJECT_ID}.appspot.com"
-    }
-    return config
-
-
-cred = credentials.Certificate("credentials.json")
+cred = credentials.Certificate(FIREBASE_CREDENTIALS_FILE)
 firebaseapp = firebase_admin.initialize_app(cred)
 
 

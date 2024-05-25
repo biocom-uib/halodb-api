@@ -28,3 +28,5 @@ secrets:
     file: secrets/mysql_halodb_password.txt
   mysql_root_password:
     file: secrets/mysql_root_password.txt
+
+# vim: ft=yaml.docker-compose
