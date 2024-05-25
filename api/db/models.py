@@ -404,9 +404,27 @@ class Sample(HaloDatabaseInstanceModel):
 
     @classmethod
     def valid_field(cls, field):
-        return (field not in cls.__file_fields__.keys() and
-                field not in cls.__file_fields__.values() and
-                field not in cls.__forbidden_files__)
+        is_valid = True
+        for key in cls.__file_fields__.keys():
+            if key == field:
+                is_valid = False
+                break
+        if is_valid:
+            for value in cls.__file_fields__.values():
+                if value == field:
+                    is_valid = False
+                    break
+            if is_valid:
+                for forbidden in cls.__forbidden_files__:
+                    if forbidden == field:
+                        is_valid = False
+                        break
+        return is_valid
+        # This doesn't work because the field "name" fails against "rrname", "tsname", ...
+        #
+        # return (field not in cls.__file_fields__.keys() and
+        #        field not in cls.__file_fields__.values() and
+        #        field not in cls.__forbidden_files__)
 
     @staticmethod
     def get(id):
