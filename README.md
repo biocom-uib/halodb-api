@@ -2,7 +2,7 @@
 
 ## Setting up for development
 
-### Required directories and permissions
+### Option 1. Clean start
 
 The following directories are mounted as volumes and must to belong to the user 1021 and group 1002. Create and `chown 1021:1002` them first if they don't exist:
 
@@ -12,9 +12,9 @@ The following directories are mounted as volumes and must to belong to the user 
 
 In addition, the Firebase credentials JSON should be placed into `secrets/firebase_credentials.json`.
 
-### Loading a snapshot
+### Option 2. From existing data.
 
-Alternatively, load a snapshot. It should contain the following data:
+Alternatively, copy existing data from a running instance. It should contain the following data:
 
 - `volumes/mysql_data/...`
 - `volumes/tmp/...`
@@ -30,9 +30,7 @@ sudo tar --same-owner -xvf halodb-snapshot.tar.gz
 *Note:* Sudo is required in order to write these files as a different user (in
 this case 1021:1002)
 
-When using a snapshot from production, remember to update the values of any
-passwords in docker-compose.override.yml with the corresponding values from the
-secrets directory.
+When using a snapshot from production for development, remember to update the values of any passwords in docker-compose.override.yml with the corresponding values from the secrets directory.
 
 ## Differences between development and production
 
@@ -53,11 +51,11 @@ Examples:
 
 Run a development server and attach to see the logs
 ```bash
-docker compose up --build && docker compose logs -f
+docker compose up --build -d && docker compose logs -f
 ```
 
 Start a production server (detached)
-```
+```bash
 ./docker-compose-prod.sh up --build -d
 ```
 
