@@ -13,7 +13,6 @@ RUN pip3 install keyring keyrings.google-artifactregistry-auth
 
 # Install requirements
 COPY requirements.txt requirements.txt
-COPY credentials.json /opt/halodb-api/credentials.json
 RUN pip3 install -r requirements.txt
 
 RUN mkdir -p /opt/halodb-api
@@ -22,9 +21,6 @@ WORKDIR /opt/halodb-api
 # Create a group and an user to avoid running the app as root
 RUN addgroup --gid 1002 biocom
 RUN adduser --disabled-password --gecos "" --force-badname --gid 1002 --uid 1021 halodb
-
-COPY --chown=halodb:biocom static /opt/halodb-api/static
-COPY --chown=halodb:biocom sql /opt/halodb-api/sql
 
 # Switch to the new user
 USER halodb
@@ -37,13 +33,12 @@ CMD exec gunicorn --reload \
   --error-logfile=- --log-level=DEBUG \
   api.main:app
 
-
 FROM base as production
 
 COPY --chown=halodb:biocom api /opt/halodb-api/api
 
 CMD exec gunicorn \
   --bind=:5000 --workers=4 --threads=16 --timeout=0 \
-  # --access-logfile=/var/log/halodb-api/access.log \
-  # --error-logfile=/var/log/halodb-api/error.log --log-level=INFO \
+  --access-logfile=/var/log/halodb-api/access.log \
+  --error-logfile=/var/log/halodb-api/error.log --log-level=INFO \
   api.main:app

@@ -38,6 +38,7 @@ class SampleController:
     @classmethod
     def filter_description_fields(cls, sample):
         complementaries = {
+            # TODO: implement publication and hkgn.
             # "publication": "publication",
             # "hkgn": "",
             "method": "method",
@@ -89,7 +90,7 @@ class SampleController:
         for key, value in supplementaries.items():
             v = sample[value['field']]
             if sample[value['field']] is not None:
-                # stmt = select(value['table']).filter_by(vmin<=v and v=vmax)
+                # stmt = select(value['table']).filter_by(vmin < v and v <= vmax)
                 #  result = session.execute(stmt).first()
                 # if result is not None:
                 #    sample[key] = result[0]

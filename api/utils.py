@@ -29,6 +29,11 @@ def convert_to_dict(row, column_names):
 
 
 def valid_value(value):
+    """
+    Convert the value to a valid string format.
+    :param value: the value to be converted.
+    :return:
+    """
     if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
         return value.isoformat()
     elif isinstance(value, datetime.timedelta):
