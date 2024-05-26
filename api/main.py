@@ -677,7 +677,7 @@ def get_uid_from_request(required: bool = False):
     return decoded_token['uid']
 
 
-@app.route('/upload/sample/<int:id_sample>/<input_type>/', methods=['PUT', 'PATCH'])
+@app.route('/upload/sample/<int:id_sample>/<input_type>', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
