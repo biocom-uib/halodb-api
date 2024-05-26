@@ -65,6 +65,7 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 
 
 # Define a custom function to serialize datetime objects
+
 def serialize_datetime(value):
     if isinstance(value, (datetime.date, datetime.time, datetime.datetime)):
         return value.isoformat()
@@ -73,6 +74,7 @@ def serialize_datetime(value):
     elif isinstance(value, decimal.Decimal):
         return str(value)
     return value
+
     # raise TypeError("Type not serializable")
 
 
