@@ -15,7 +15,6 @@ class UserController:
         """
         return to_dict(User.query.all())
 
-
     @classmethod
     def get_user(cls, user_id: int):
         """
@@ -32,7 +31,8 @@ class UserController:
         :param uid: the (unique) uid of the user.
         :return: the user if it exists, None otherwise.
         """
-        return User.get_by_uid(uid)
+        return User.query.filter(User.uid == uid).first() # .as_dict()
+        # return User.get_by_uid(uid)
 
     @classmethod
     def get_user_by_email(cls, email: str):
@@ -50,7 +50,7 @@ class UserController:
         :param params: the user data to be used.
         :return: the user data, with the automatic fields updated.
         """
-        new_user = User('')
+        new_user = User()
         new_user.email = params['email']
         new_user.name = params['name']
         new_user.surname = params['surname']
@@ -81,7 +81,7 @@ class UserController:
 
                 stmt = select(User).filter_by(uid=new_user.uid)
                 user_created = session.execute(stmt).first()
-                user_created = user_created[0]
+                # user_created = user_created[0]
             except Exception as e:
                 session.rollback()
                 raise e

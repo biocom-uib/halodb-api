@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.db.db import DatabaseInstance
-from api.db.models import Project, Experiment, UserProject
+from api.db.models import Project, Experiment, User  # , User_Project
 from api.utils import to_dict
 
 
@@ -43,8 +43,13 @@ class ProjectController:
         """
 
         with DatabaseInstance.get().session() as session:
-            stmt = select(Project.id, Project.name, Project.description).join(UserProject).where(UserProject.user_id == user_id)
-            projects = session.execute(stmt).all()
+            user = session.query(User).filter_by(id=user_id).first()
+            if user is None:
+                projects = []
+            else:
+                # stmt = select(Project.id, Project.name, Project.description).join(UserProject).where(UserProject.user_id == user_id)
+                # projects = session.execute(stmt).all()
+                projects = user.projects
 
         return to_dict(projects)
 
