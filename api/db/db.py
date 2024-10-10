@@ -2,12 +2,11 @@ import time
 from typing import Self, Optional
 
 import MySQLdb
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
-# from sqlalchemy.ext.automap import automap_base
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import declarative_base
-
+# ##from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 
 from api import config, log
@@ -21,18 +20,26 @@ DATABASE_NAME = config.MYSQL_DATABASE
 SQLALCHEMY_DATABASE_URI = (f"mysql://{DATABASE_USERNAME}:{DATABASE_PASSWORD}"
                            f"@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}")
 
-Base = declarative_base()
-# Base = automap_base()
+# ##Base = declarative_base()
+Base = automap_base()
 
+
+def pluralize_collection(base, local_cls, referred_cls, constraint):
+    return referred_cls.__name__.lower()
 
 class DatabaseInstance:
     _instance = None
 
     def __init__(self):
-        self.engine = create_engine(SQLALCHEMY_DATABASE_URI)
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.db = SQLAlchemy(model_class=Base)
-        self.db.metadata.reflect(self.engine)
+        self.engine = create_engine(SQLALCHEMY_DATABASE_URI)
+
+        Base.prepare(autoload_with=self.engine,
+                     name_for_collection_relationship=pluralize_collection)
+
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        # ## self.db.metadata.reflect(self.engine)
+        #### Base.metadata.create_all(self.engine)
 
     def init_app(self, app):
         return self.db.init_app(app)
@@ -55,6 +62,7 @@ class DatabaseInstance:
     @staticmethod
     def wait_for_connection_and_create_instance(wait_time: int, attempts: int) -> Optional[Self]:
         if DatabaseInstance._instance is not None:
+            # return DatabaseInstance._instance
             raise RuntimeError('The global instance already exists')
 
         def connect():

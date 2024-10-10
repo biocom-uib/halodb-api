@@ -1,10 +1,12 @@
 import datetime
+from distutils.core import setup
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.type_api import to_instance
 
 from api.db.db import DatabaseInstance
-from api.db.models import Group, UserHasGroup
+from api.db.models import Group, User, User_Has_Group
 from api.utils import to_dict
 
 
@@ -15,18 +17,6 @@ class GroupController:
         A group can have many samples
         A user can have different access permissions to different groups
     """
-
-    @staticmethod
-    def _get_group_by_name(the_name: str, session: Session):
-        """
-        internal method to get a group by name using an already opened session.
-        :param the_name: the name of the group to be retrieved.
-        :param session: the database session to use to retrieve the group.
-        :return: the group if it exists, None otherwise.
-        """
-        stmt = select(Group).filter_by(name=the_name)
-        group = session.execute(stmt).first()
-        return group
 
     @classmethod
     def list_groups(cls):
@@ -42,14 +32,18 @@ class GroupController:
         :param user_id: the user identification.
         :return: the groups having the user as a member (can be None).
         """
-        # with DatabaseInstance.get().session() as session:
-        session = DatabaseInstance.get().session()
-        stmt = select(UserHasGroup.relation,
-                      Group.id, Group.name, Group.description).join_from(Group, UserHasGroup).where(
-            UserHasGroup.user_id == user_id)
-        groups = session.execute(stmt).all()
+        #
+        groups = None
+        with DatabaseInstance.get().session() as session:
+            stmt = select(User_Has_Group.relation,
+                          Group.id, Group.name, Group.description).join_from(Group, User_Has_Group).where(
+                User_Has_Group.user_id == user_id)
+            groups = session.execute(stmt).all()
+            the_user = User.query.filter(User.id == user_id).first()
 
-        return to_dict(groups)
+            groups = to_dict(the_user.groups)
+
+        return groups
 
     @classmethod
     def get_group_by_name(cls, name: str):
@@ -85,7 +79,7 @@ class GroupController:
                 if group is None:
                     raise Exception(f"Group with id {group_id} not found")
 
-                stmt = select(UserHasGroup).filter_by(user_id=user_id).filter_by(group_id=group_id)
+                stmt = select(User_Has_Group).filter_by(user_id=user_id).filter_by(group_id=group_id)
                 user_has_group = session.execute(stmt).first()
                 if user_has_group is None or user_has_group[0].relation != 'invited':
                     raise Exception(f"User with id {user_id} is not invited to the group")
@@ -116,8 +110,8 @@ class GroupController:
                 if group is None:
                     raise Exception(f"Group with id {group_id} not found")
 
-                # test = UserHasGroup.get(invited_id, group_id)
-                stmt = select(UserHasGroup).filter_by(group_id=group_id, user_id=invited_id)
+                # test = User_Has_Group.get(invited_id, group_id)
+                stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=invited_id)
                 test = session.execute(stmt).first()
                 if test is not None:
                     if test[0].relation != 'invited':
@@ -125,16 +119,16 @@ class GroupController:
                     else:
                         raise Exception(f"User with id {invited_id} has already been invited to the group")
 
-                stmt = select(UserHasGroup).filter_by(group_id=group_id, user_id=owner_id)
+                stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=owner_id)
                 test = session.execute(stmt).first()
-                # test = UserHasGroup.get(owner_id, group_id)
+                # test = User_Has_Group.get(owner_id, group_id)
                 if test is None:
                     raise Exception(f"User with id {owner_id} doesn't belong to the group")
 
                 if test[0].relation != 'owner':
                     raise Exception(f"User with id {owner_id} doesn't have the right privileges to invite")
 
-                entry: UserHasGroup = UserHasGroup(group_id=group_id, user_id=invited_id, relation='invited')
+                entry: User_Has_Group = User_Has_Group(group_id=group_id, user_id=invited_id, relation='invited')
                 session.add(entry)
                 session.commit()
             except Exception as e:
@@ -142,31 +136,36 @@ class GroupController:
                 raise e
 
     @classmethod
-    def create_group(cls, data: dict):
+    def create_group(cls, data: dict, user: User):
         """
         Create a group. The group name must be unique.
+        :param user: the owner of the group.
         :param data: a dictionary with the keys and values to be used to create the group.
         :return: the group created, with the automated data added.
         """
 
-        group_to_create = Group('')
+        group_to_create = Group()
         group_to_create.from_dict(data)
         with DatabaseInstance.get().session() as session:
             try:
                 # In order to have clarity, no two groups can have the same name
-                test = cls._get_group_by_name(group_to_create.name, session)
+                test = Group.query.filter_by(name=group_to_create.name).first()
                 if test is not None:
                     raise Exception(f'The group name "{group_to_create.name}" is already in use')
 
                 session.add(group_to_create)
+                session.flush()
+                connection = User_Has_Group(group_id=group_to_create.id, user_id=user.id, relation='owner')
+                session.add(connection)
+
                 session.commit()
 
-                group_created = cls._get_group_by_name(group_to_create.name, session)[0]
+                group_created = group_to_create.as_dict()
             except Exception as e:
                 session.rollback()
                 raise e
 
-            return group_created.as_dict()
+            return group_created
 
     @classmethod
     def update_group(cls, group_id: int, new_data: dict):
@@ -179,28 +178,26 @@ class GroupController:
         """
         with DatabaseInstance.get().session() as session:
             try:
-                stmt = select(Group).filter_by(id=group_id)
-                group = session.execute(stmt).first()
-                if group is None:
+                group_to_edit = Group.query.filter_by(id=group_id).first()
+                if group_to_edit is None:
                     raise Exception("Group not found")
-                group_to_edit = group[0]
+
                 for key, value in new_data.items():
                     # setattr(group_to_edit, key, value)
                     if key == 'name':
-                        stmt = select(Group).filter_by(name=value)
-                        test = session.execute(stmt).first()
+                        test = Group.query.filter_by(name=value).first()
                         if test is not None:
                             raise Exception(f'The name "{value}" is already in use')
                         setattr(group_to_edit, key, value)
-                    elif key == 'description':
+                    elif key != 'id':
                         setattr(group_to_edit, key, value)
+                session.query(Group).filter_by(id=group_id).update(group_to_edit.as_dict())
 
-                # session.add(group_to_edit)
                 session.commit()
             except Exception as e:
                 session.rollback()
                 raise e
-            return group_to_edit.as_dict()
+            return group_to_edit
 
     @classmethod
     def delete_group(cls, group_id: int):
@@ -217,11 +214,11 @@ class GroupController:
                 if group is None:
                     raise Exception(f"Group with (group_id) does not exist")
 
-                group_to_delete = group[0]
+                group_to_delete = group
 
                 # Remove the group from all its users
-                for user in group_to_delete.users:
-                    user.groups.remove(group_to_delete)
+                for relation_to_user in group_to_delete.user_has_group:
+                    session.delete(relation_to_user)
 
                 # Remove the group
                 session.delete(group_to_delete)
@@ -229,3 +226,17 @@ class GroupController:
             except Exception as e:
                 session.rollback()
                 raise e
+
+    @classmethod
+    def get_relation(cls, user_id, group_id):
+        """
+        Get the relation between a user and a group.
+        :param user_id: the user identifier
+        :param group_id: the group identifier
+        :return: the relation between the user and the group.
+        """
+        with DatabaseInstance.get().session() as session:
+            stmt = select(User_Has_Group.relation).where(User_Has_Group.user_id == user_id).where(
+                User_Has_Group.group_id == group_id)
+            relation = session.execute(stmt).first()
+            return relation[0] if relation is not None else None
