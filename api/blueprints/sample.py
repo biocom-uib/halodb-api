@@ -27,7 +27,7 @@ from werkzeug.utils import secure_filename
 
 sample_page = Blueprint('sample_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 # ##############################################################
@@ -36,7 +36,7 @@ limiter = Limiter(get_remote_address)
 
 @sample_page.route('/sample/', methods=['POST'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -129,7 +129,7 @@ def get_user_and_sample_id_by_uuid(uid, id_sample):
 
 @sample_page.route('/sample/<int:id_sample>/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -175,7 +175,7 @@ def update_fields_sample(params: dict, id_sample: int, **kwargs):
 
 @sample_page.route('/sample/<int:id_sample>/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token
@@ -222,7 +222,7 @@ def get_sample(params: dict, id_sample: int, **kwargs):
 
 @sample_page.route('/<string:step>/<int:step_id>/share/public/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 #@log_params
 @required_token
@@ -256,7 +256,7 @@ def make_sample(params: dict, step: str, step_id: int, **kwargs):
 # ##########################
 @sample_page.route('/<string:step>/<int:step_id>/share/user/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -310,7 +310,7 @@ def share_sample_user(params: dict, step: str, step_id: int, **kwargs):
 
 @sample_page.route('/<string:step>/<int:step_id>/share/user/<string:user_uuid>/', methods=['DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -357,7 +357,7 @@ def unshare_sample_other_user(params: dict, step:str, step_id: int, user_uuid: i
 
 @sample_page.route('/<string:step>/<int:step_id>/share/group/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -400,7 +400,7 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
 
 @sample_page.route('/<string:step>/<int:step_id>/share/group/<int:group_id>/', methods=['DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token

@@ -17,12 +17,12 @@ from api.utils import serialize_datetime
 
 user_page = Blueprint('user_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 @user_page.route('/user/', methods=['POST'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -51,7 +51,7 @@ def add_user(params: dict, **kwargs):
 
 @user_page.route('/user/', methods=['GET', 'DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -90,7 +90,7 @@ def user_handle(params: dict, **kwargs):
 
 @user_page.route('/user/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token

@@ -10,6 +10,8 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_log_request_id import RequestID
+from sqlalchemy import literal
+from sympy.codegen.fnodes import literal_dp
 from werkzeug.utils import secure_filename
 
 from api import log
@@ -25,7 +27,7 @@ app = Flask(__name__)
 
 CORS(app)
 RequestID(app)
-limiter = Limiter(get_remote_address, app=app)
+limiter = Limiter(get_remote_address, app=app, default_limits = ["100/minute"])
 
 log.setup_logger(app, gunicorn=__name__ != '__main__')
 
@@ -48,6 +50,14 @@ if db is not None:
     from api.blueprints.sample import sample_page
     from api.blueprints.sequence import sequence_page
     from api.blueprints.general import general_page
+
+    # limiter.limit("100/minute")(app)
+    limiter.limit("100/minute")(user_page)
+    limiter.limit("100/minute")(group_page)
+    limiter.limit("100/minute")(project_page)
+    limiter.limit("100/minute")(sample_page)
+    limiter.limit("100/minute")(sequence_page)
+    limiter.limit("100/minute")(general_page)
 
     app.register_blueprint(user_page)
     app.register_blueprint(group_page)
