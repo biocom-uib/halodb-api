@@ -28,7 +28,7 @@ from werkzeug.utils import secure_filename
 
 sequence_page = Blueprint('sequence_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 # ##############################################################
@@ -47,7 +47,7 @@ def validate_sequence_step(sequence: str, step: str):
 
 @sequence_page.route('/<string:step>/', methods=['POST'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -165,7 +165,7 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
 
 @sequence_page.route('/<string:step>/<int:step_id>/', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -226,7 +226,7 @@ def update_fields_sample(params: dict, step: str, step_id: int, **kwargs):
 
 @sequence_page.route('/<string:step>/<int:step_id>/<input_type>/', methods=['PUT', 'PATCH'])
 @wrap_error
-# @limiter.limit("100/minute")
+# # @limiter.limit("100/minute")
 @get_params
 # @log_params
 # @required_token
@@ -273,7 +273,7 @@ def upload_sample_file(params: dict, step: str, step_id: int, input_type: str):
 
 @sequence_page.route('/<string:step>/<int:step_id>/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token
@@ -314,7 +314,7 @@ def get_sample(params: dict, step: str, step_id: int, **kwargs):
 
 @sequence_page.route('/<string:step>/<int:id_sample>/<input_type>/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token

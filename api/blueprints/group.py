@@ -14,14 +14,14 @@ from api.utils import serialize_datetime
 
 group_page = Blueprint('group_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 
 
 @group_page.route('/group/', methods=['POST'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -59,7 +59,7 @@ def add_group(params: dict, **kwargs):
 
 @group_page.route('/group/', methods=['GET', 'DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -139,7 +139,7 @@ def group_handle(params: dict, **kwargs):
 
 @group_page.route('/group/<int:group_id>', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -241,7 +241,7 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
 # ##############################################################
 @group_page.route('/group/invitation/<int:group>', methods=['PUT', 'PATCH', 'DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token

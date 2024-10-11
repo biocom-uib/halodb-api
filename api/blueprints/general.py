@@ -30,7 +30,7 @@ from werkzeug.utils import secure_filename
 
 general_page = Blueprint('general_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 
@@ -40,7 +40,7 @@ limiter = Limiter(get_remote_address)
 
 @general_page.route('/users/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 def users(params: dict, **kwargs):
@@ -67,7 +67,7 @@ def users(params: dict, **kwargs):
 
 @general_page.route('/groups/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 def groups(params: dict, **kwargs):
@@ -88,7 +88,7 @@ def groups(params: dict, **kwargs):
 
 @general_page.route('/sequences/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 def sequences_list(params: dict, **kwargs):
@@ -108,7 +108,7 @@ def sequences_list(params: dict, **kwargs):
 
 # @general_page.route('/sequence/<string:seq>/', methods=['GET'])
 # @wrap_error
-# @limiter.limit("100/minute")
+# # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # def sequences_list(params: dict, seq:str, **kwargs):
@@ -131,7 +131,7 @@ def sequences_list(params: dict, **kwargs):
 
 @general_page.route('/query/sequence/<string:name>/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token
@@ -155,7 +155,7 @@ valid_tables = {'temperature':Temperature, 'ph':Ph, 'salinity':Salinity}
 
 @general_page.route('/query/<string:table>/')
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
@@ -182,7 +182,7 @@ def get_table_data(table: str):
 # ##############################################################
 @general_page.route('/query/<string:table>/<float:value>/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token

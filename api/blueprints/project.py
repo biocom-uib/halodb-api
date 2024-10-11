@@ -16,7 +16,7 @@ from api.utils import serialize_datetime
 
 project_page = Blueprint('project_page', __name__)
 
-limiter = Limiter(get_remote_address)
+# limiter = Limiter(get_remote_address)
 
 
 # ##############################################################
@@ -24,7 +24,7 @@ limiter = Limiter(get_remote_address)
 # ##############################################################
 @project_page.route('/project/', methods=['GET', 'POST'])
 @wrap_error
-@limiter.limit("100/minute")
+# # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -63,7 +63,7 @@ def create_project(params: dict, **kwargs):
 
 @project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -101,7 +101,7 @@ def project_handle(params: dict, id: Optional[int] = None, **kwargs):
 
 @project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
@@ -135,7 +135,7 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
 
 @project_page.route('/project/<int:id>/list/', methods=['GET'])
 @wrap_error
-@limiter.limit("100/minute")
+# @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token

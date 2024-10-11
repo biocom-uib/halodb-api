@@ -1,5 +1,5 @@
 
-USE `HaloDB` ;
+USE `halodb` ;
 
 
 insert into method (description) values
