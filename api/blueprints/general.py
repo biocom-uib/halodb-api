@@ -23,7 +23,7 @@ from api.db.db import DatabaseInstance
 
 from api.decorators import wrap_error, get_params, log_params, error, ok_message
 from api.field_utils import valid_field, sequences
-from api.utils import serialize_datetime
+from api.utils import serialize_datetime, normalize
 from api.utils import to_dict
 
 from werkzeug.utils import secure_filename
@@ -45,7 +45,7 @@ general_page = Blueprint('general_page', __name__)
 @log_params
 def users(params: dict, **kwargs):
     """
-    Return the list of users currently registered in the system
+    Returns the list of users currently registered in the system
     :param params:
     :param kwargs:
     :return:
@@ -71,6 +71,12 @@ def users(params: dict, **kwargs):
 @get_params
 @log_params
 def groups(params: dict, **kwargs):
+    """
+    Returns the list of groups currently defined in the system.
+    :param params:
+    :param kwargs:
+    :return:
+    """
     message = ''
     result_status = 200
 
@@ -89,9 +95,23 @@ def groups(params: dict, **kwargs):
 @general_page.route('/sequences/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
-def sequences_list(params: dict, **kwargs):
+# @get_params
+# @log_params
+def sequences_list():
+    """
+    Returns the structure of the genomic sequences defined. By now, the sequences are hardcoded and are the following
+
+    - METAGENOME: RAW READS, TRIMMED READS, CONTIGS, PREDICTED GENES, MAGS
+    - METATRANSCRIPTOME: RAW READS, TRIMMED READS
+    - METAVIROME: RAW READS, TRIMMED READS, CONTIGS, PREDICTED GENES, CONTIGS VIRUS
+    - GENOME PROCARIOTA: RAW READS, GENOME, PREDICTED GENES
+    - GENOME VIRUS: RAW READS, GENOME, PREDICTED GENES
+    - PROTEOMICS: PEPTIDES
+    - SINGLE CELL GENOMICS: RAW READS, SINGLE CELL GENOME, PREDICTED GENES
+    - PLASMID: RAW READS, PLASMID, PREDICTED GENES
+
+    :return:
+    """
     message = ''
     result_status = 200
 
@@ -132,17 +152,18 @@ def sequences_list(params: dict, **kwargs):
 @general_page.route('/query/sequence/<string:name>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 # @required_token
-def get_sequence(params: dict, name: str, **kwargs):
+def get_sequence(name: str, **kwargs):
     """
-    Given a sequence name, return the corresponding sequence steps
-    :param params:
-    :param name:
+    Given a genomic sequence name, return the corresponding sequence steps
+    :param name: the name of the genomic sequence
     :param kwargs:
-    :return:
+    :return: the list of valid steps for the genomic sequence
     """
+    name = normalize(name)
+
     log.info('Request to get the genomic sequence related to {name}')
 
     if name in sequences:
@@ -161,10 +182,14 @@ valid_tables = {'temperature':Temperature, 'ph':Ph, 'salinity':Salinity}
 # @required_token
 def get_table_data(table: str):
     """
-    Given a classification, return the set of its categories and the corresponding range
+    Returns the set of its categories and the corresponding range for a given classification.
+    The possible classifications are: temperature, ph, salinity.
+
     :param table: the classification to be returned
     :return:
     """
+    table = table.lower()
+
     if table not in valid_tables:
         error(f"Table {table} not found", 404)
     else:
@@ -188,31 +213,28 @@ def get_table_data(table: str):
 # @required_token
 def get_classification_data(table: str, value: float):
     """
-    Given a table and a value, return the corresponding category.
+    Given a classification and a value, returns the range corresponding to the value.
     :param table: the categories table where look for the value.
     :param value: the value to be categorized
     :return:
     """
-    valid_field("table")
-    with DatabaseInstance.get().session() as session:
-        if table == 'temperature':
-            element = session.query(Temperature).filter(Temperature.vmin < value, value <= Temperature.vmax).first()
-            vmin, vmax = session.query(func.min(Temperature.vmin), func.max(Temperature.vmax)).first()
-        elif table == 'ph':
-            element = session.query(Ph).filter(Ph.vmin < value, value <= Ph.vmax).first()
-            vmin, vmax = session.query(func.min(Ph.vmin), func.max(Ph.vmax)).first()
-        elif table == 'salinity':
-            element = session.query(Salinity).filter(Salinity.vmin < value, value <= Salinity.vmax).first()
-            vmin, vmax = session.query(func.min(Salinity.vmin), func.max(Salinity.vmax)).first()
-        else:
-            element = None
+
+    table = table.lower()
+
+    if table not in valid_tables:
+        error(f"Table {table} not found", 404)
+    else:
+        dbtable = valid_tables[table]
+        element = dbtable.query.filter(dbtable.vmin < value, value <= dbtable.vmax).first()
+
         if element is not None:
             value = element.description
-        elif value < vmin:
-            value = f"Less than minimum ({vmin})"
-        elif value > vmax:
-            value = f"More than maximum ({vmax})"
         else:
-            value = None
+            vmin, vmax = dbtable.query.with_entities(func.min(dbtable.vmin), func.max(dbtable.vmax)).first()
+            if value <= vmin:
+                value = f"Less than minimum ({vmin})"
+            else: # value > vmax
+                value = f"More than maximum ({vmax})"
+
         return jsonify(value)
 

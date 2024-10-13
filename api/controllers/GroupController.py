@@ -105,27 +105,28 @@ class GroupController:
         """
         with DatabaseInstance.get().session() as session:
             try:
-                stmt = select(Group).filter_by(id=group_id)
-                group = session.execute(stmt).first()
+                # stmt = select(Group).filter_by(id=group_id)
+                # group = session.execute(stmt).first()
+                group = Group.query.filter_by(id=group_id).first()
                 if group is None:
                     raise Exception(f"Group with id {group_id} not found")
 
-                # test = User_Has_Group.get(invited_id, group_id)
-                stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=invited_id)
-                test = session.execute(stmt).first()
+                # stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=invited_id)
+                # test = session.execute(stmt).first()
+                test = User_Has_Group.query.filter_by(group_id=group_id, user_id=invited_id).first()
                 if test is not None:
-                    if test[0].relation != 'invited':
+                    if test.relation != 'invited':
                         raise Exception(f"User with id {invited_id} is a member the group")
                     else:
                         raise Exception(f"User with id {invited_id} has already been invited to the group")
 
-                stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=owner_id)
-                test = session.execute(stmt).first()
-                # test = User_Has_Group.get(owner_id, group_id)
+                # stmt = select(User_Has_Group).filter_by(group_id=group_id, user_id=owner_id)
+                # test = session.execute(stmt).first()
+                test = User_Has_Group.query.filter_by(group_id=group_id, user_id=owner_id).first()
                 if test is None:
                     raise Exception(f"User with id {owner_id} doesn't belong to the group")
 
-                if test[0].relation != 'owner':
+                if test.relation != 'owner':
                     raise Exception(f"User with id {owner_id} doesn't have the right privileges to invite")
 
                 entry: User_Has_Group = User_Has_Group(group_id=group_id, user_id=invited_id, relation='invited')
