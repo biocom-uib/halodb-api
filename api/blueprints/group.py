@@ -16,9 +16,6 @@ group_page = Blueprint('group_page', __name__)
 
 # limiter = Limiter(get_remote_address)
 
-
-
-
 @group_page.route('/group/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
@@ -137,7 +134,7 @@ def group_handle(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@group_page.route('/group/<int:group_id>', methods=['PUT', 'PATCH'])
+@group_page.route('/group/<int:group_id>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
@@ -191,7 +188,7 @@ def group_edit(params: dict, group_id: int, **kwargs):
 #  Querying information related to a user
 # ##############################################################
 
-@group_page.route('/group/list/<string:table>/', methods=['GET'])
+@group_page.route('/group/<string:table>/list/', methods=['GET'])
 @get_params
 @wrap_error
 # @required_token
@@ -239,16 +236,16 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
 # ##############################################################
 # Group invitation handling
 # ##############################################################
-@group_page.route('/group/invitation/<int:group>', methods=['PUT', 'PATCH', 'DELETE'])
+@group_page.route('/group/<int:group>/invitation/', methods=['PUT', 'PATCH', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @required_token
-def accept(params: dict, group: int, **kwargs):
+def accept(group: int, **kwargs):
     """
-    Accept or reject an invitation to join a group
-    :param params:
+    Accept or reject an invitation to join a group, if the request is a DELETE, the invitation is rejected
+
     :param group: the group identifier
     :return:
     """
@@ -269,22 +266,23 @@ def accept(params: dict, group: int, **kwargs):
                     mimetype="application/json")
 
 
-@group_page.route('/group/invite/<int:invited>/<int:group>', methods=['POST'])
+@group_page.route('/group/<int:group>/invite/<string:invited_uid>/', methods=['POST'])
 @wrap_error
-def invite(params: dict, invited: int, group: int, **kwargs):
+@required_token
+def invite(invited_uid: int, group: int, **kwargs):
     """
     Invite a user to join a group
-    :param params:
-    :param invited: the user to invite
+    :param invited_uid: the user to invite
     :param group: the group to join
     :return:
     """
     try:
-        uid = kwargs['uid']
-        owner = UserController.get_user_by_uid(uid).id
+        owner_uid = kwargs['uid']
+        owner_id = UserController.get_user_by_uid(owner_uid).id
+        user_invited_id = UserController.get_user_by_uid(invited_uid).id
 
-        log.info(f"Invitation request from user {owner} to user {invited} to join group {group}")
-        GroupController.invite(owner, invited, group)
+        log.info(f"Invitation request from user {owner_uid} to user {invited_uid} to join group {group}")
+        GroupController.invite(owner_id, user_invited_id, group)
         result = {"message": "OK"}
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
