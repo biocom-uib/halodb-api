@@ -6,7 +6,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from api import log
-from api.auth import required_token, get_uid_from_request
+from api.auth import required_token, not_required_token
 from api.controllers.GroupController import GroupController
 from api.controllers.UserController import UserController
 from api.decorators import wrap_error, get_params, log_params
@@ -191,7 +191,7 @@ def group_edit(params: dict, group_id: int, **kwargs):
 @group_page.route('/group/<string:table>/list/', methods=['GET'])
 @get_params
 @wrap_error
-# @required_token
+@not_required_token
 def get_table_list_by_user(params: dict, table: str, **kwargs):
     """
     Given a user id and a related element (group, experiment, project or sample), return the list of elements related
@@ -201,7 +201,8 @@ def get_table_list_by_user(params: dict, table: str, **kwargs):
     :param table: the table to get the related data.
     :return: the list of elements of the table related to the user. Or the list of public samples
     """
-    uid = get_uid_from_request(False)
+    uid: str = kwargs['uid']
+    # uid: str = not_required_token(False)
     # TODO: implement the query for the different tables
 
     ## if uid is None:

@@ -92,24 +92,6 @@ def serialize_datetime(value):
 
     # raise TypeError("Type not serializable")
 
-
-def get_uid_from_request(required: bool = False):
-    """
-    Get the user id from the request. If the token is not present, return None if required is False, otherwise abort.
-    :param required: True if it's mandatory to have a valid token to proceed. In this case if no token is provided, abort.
-    :return: the uid or None if no token is provided and required is False.
-    """
-    token = request.headers.get('Authorization')
-    if not token:
-        if required:
-            abort(403, 'No token provided')
-        return None
-    if not token.startswith('Bearer '):
-        abort(403, 'Invalid token type')
-
-    decoded_token = verify_token(token.split(' ')[1])
-    return decoded_token['uid']
-
 def commas_to_dot(value: str):
     """
     Replace commas with dots in a string. Also removes all leading and trailing whitespace.

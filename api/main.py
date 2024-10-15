@@ -47,7 +47,6 @@ if db is not None:
     from api.blueprints.user import user_page
     from api.blueprints.group import group_page
     from api.blueprints.project import project_page
-    from api.blueprints.sample import sample_page
     from api.blueprints.sequence import sequence_page
     from api.blueprints.general import general_page
 
@@ -55,14 +54,12 @@ if db is not None:
     limiter.limit("100/minute")(user_page)
     limiter.limit("100/minute")(group_page)
     limiter.limit("100/minute")(project_page)
-    limiter.limit("100/minute")(sample_page)
     limiter.limit("100/minute")(sequence_page)
     limiter.limit("100/minute")(general_page)
 
     app.register_blueprint(user_page)
     app.register_blueprint(group_page)
     app.register_blueprint(project_page)
-    app.register_blueprint(sample_page)
     app.register_blueprint(sequence_page)
     app.register_blueprint(general_page)
 
@@ -71,9 +68,9 @@ else:
     log.error('The database could not be initialized')
 
 # This has to be imported here
-from api.db.models import Temperature, Ph, Salinity, Sample
+# from api.db.models import Temperature, Ph, Salinity, Sample
 
-from api.controllers.UserController import UserController
+# from api.controllers.UserController import UserController
 
 @app.route("/")
 @wrap_error
@@ -88,7 +85,7 @@ def dummy(params: dict, email: Optional[str] = None, **kwargs):
 
 
 # ######################################################
-# User handling
+# General purposes handling
 # ######################################################
 
 @app.route('/query/<string:table>/')
@@ -113,25 +110,6 @@ def get_table_data(table: str):
                     status=200,
                     mimetype="application/json")
 
-
-# ##############################################################
-# Sharing samples handling
-# ##############################################################
-
-# ##############
-# GROUPS
-# ##############
-
-
-# ##############################################################
-# Testing the API
-#    The following endpoints are used to test the API.
-#    They will be removed.
-# ##############################################################
-
-# ##############################################################
-# End testing the API
-# ##############################################################
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

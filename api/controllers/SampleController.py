@@ -133,51 +133,6 @@ class SampleController:
         return data
 
     @classmethod
-    def create_sample(cls, data: dict, user_id):
-        with DatabaseInstance.get().session() as session:
-            try:
-                sample_to_create = Sample()
-                fix_times(data)
-
-                if 'project_id' in data:
-                    project = Project.query.get(data['project_id'])
-                    if project is None:
-                        raise Exception("Project not found")
-                    found = False
-                    for test in Project.users:
-                        if test.id == user_id:
-                            found = True
-                            break
-                    if not found:
-                        raise Exception("User is not associated with the project")
-
-                    sample_to_create.project_id = project
-                else:
-                    sample_to_create.project_id = None
-
-                wrong_complementaries = cls.test_description_fields(data)
-                if len(wrong_complementaries) > 0:
-                    raise Exception(f"Fields {wrong_complementaries} are not valid")
-
-                # Fix the owner of the sample to the current owner
-                data['user_id'] = user_id
-                # sample_to_create.user = session.query(User).filter(User.id == user_id).first()
-
-                sample_to_create.from_dict(data)
-
-                session.add(sample_to_create)
-
-                session.commit()
-
-                result = sample_to_create.as_dict()
-                result = filter_dict(result)
-
-                return result
-            except Exception as e:
-                session.rollback()
-                raise e
-
-    @classmethod
     def get_file_data(cls, step, field):
         if not is_file_field(field):
             raise Exception("The field is not a file")
@@ -197,8 +152,8 @@ class SampleController:
             uuid_file = str(uuid.uuid4())
             setattr(step, field, uuid_file)
 
-        setattr(step, Sample.get_file_name_field(field), filename)
-        setattr(step, "updated", datetime.datetime.now())
+        setattr(step, get_file_name_field(field), filename)
+        setattr(step, 'updated', datetime.datetime.now())
         file_data.save(os.path.join(UPLOADS_DIR, uuid_file))
 
 
@@ -222,8 +177,8 @@ class SampleController:
 
                 cls.add_file(step_to_edit, file_id, file_data, filename_field, file_name)
 
-                session.add(step_to_edit)
-
+                # session.add(step_to_edit)
+                session.query(current_class).filter_by(id=step_id).update(step_to_edit.as_dict())
                 session.commit()
             except Exception as e:
                 session.rollback()
@@ -310,25 +265,25 @@ class SampleController:
 
 
     @classmethod
-    def get_access_mode(cls, user_id, sample_id: int):
+    def get_access_mode(cls, table, user_id, step_id: int):
         # accessible_list = cls.get_samples_shared_with_user(user_id)
         # for sample in accessible_list:
         #     if sample['id'] == sample_id:
         #         return sample['access_mode']
         # return None
-        the_sample = Sample.query.get(sample_id)
+        the_step = table.query.get(step_id)
 
-        if the_sample.is_public:
+        if the_step.is_public:
             return 'read'
 
-        if the_sample.user_id == user_id:
+        if the_step.user_id == user_id:
             return 'readwrite'
 
-        for shared_user in the_sample.user_shared_sample:
+        for shared_user in the_step.user_shared_sample:
             if shared_user.user_id == user_id:
                 return shared_user.access_mode
 
-        for shared_group in the_sample.group_shared_sample:
+        for shared_group in the_step.group_shared_sample:
             for user_group in shared_group.group.user_has_group:
                 if user_id == user_group.user_id and user_group.relation != 'invited':
                     return shared_group.access_mode
@@ -532,8 +487,12 @@ class SampleController:
     @classmethod
     def create_sequence_step(cls, data, sequence, step, user_id):
 
-        # Get the reference tables for the sequence and the step
-        current_class, parent_class = get_reference_tables(sequence, step)
+        if sequence is None and step == 'SAMPLE':
+            current_class = Sample
+            parent_class = None
+        else:
+            # Get the reference tables for the sequence and the step
+            current_class, parent_class = get_reference_tables(sequence, step)
 
         with (DatabaseInstance.get().session() as session):
             try:
@@ -568,9 +527,10 @@ class SampleController:
 
                 session.add(step_to_create)
 
-                result = step_to_create.as_dict()
-
                 session.commit()
+
+                result = step_to_create.as_dict()
+                result = filter_dict(result)
 
                 return result
             except Exception as e:
