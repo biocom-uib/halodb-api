@@ -22,7 +22,7 @@ sequence_page = Blueprint('sequence_page', __name__)
 
 
 # ##############################################################
-# Sample handling
+# Genomic sequence steps and Sample handling
 # ##############################################################
 
 def validate_sequence_step(sequence: str, step: str):
@@ -176,9 +176,9 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
 @get_params
 @log_params
 @required_token
-def update_fields_sample(params: dict, step: str, step_id: int, **kwargs):
+def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
     if 'sequence' not in params:
-        abort(400, "Sequence not provided")
+        abort(400, "Genomic sequence not provided")
 
     sequence = normalize(params['sequence'])
     step = normalize(step)
@@ -272,7 +272,7 @@ def get_step(params: dict, step: str, step_id: int, **kwargs):
     # return send_from_directory(sequence_page.config['static_folder'], mocked_sample_file)
 
 
-@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['POST'])
+@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # # @limiter.limit("100/minute")
 # @get_params
@@ -281,8 +281,6 @@ def get_step(params: dict, step: str, step_id: int, **kwargs):
 def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
 
     uid: str = kwargs['uid']
-    # uid = not_required_token(False)
-    # TODO: comprovar access mode
 
     params = dict(request.form)
 
@@ -306,7 +304,7 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
         user_id = UserController.get_user_by_uid(uid).id
         access = SampleController.get_step_access_mode(step, user_id, step_id)
         if access is None or access != 'readwrite':
-            abort(403, f"User {user_id} doesn't have the privileges to modify the sample {step_id}")
+            abort(403, f"User {user_id} doesn't have the privileges to modify the {step} {step_id} uploading files")
 
         SampleController.update_file(sequence, step, step_id, input_type, filename, file)
         message = {'status': 'success',
@@ -325,7 +323,7 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
 
 
 
-@sequence_page.route('/<string:step>/<int:step_id>/<input_type>/', methods=['GET'])
+@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
@@ -338,7 +336,7 @@ def get_sample_file(params: dict, step: str, step_id:int, input_type: str, **kwa
 
     if uid is None:
         log.info(f'Request received to get file {input_type} from {step =} as public data')
-        the_step = SampleController.get_step_by_id(table, step)
+        the_step = SampleController.get_step_by_id(table, step_id)
         if the_step is None:
             abort(400, f'Sequence step {step} with id {step_id} not found')
 
@@ -373,7 +371,7 @@ def get_sample_file(params: dict, step: str, step_id:int, input_type: str, **kwa
 @get_params
 #@log_params
 @required_token
-def make_sample(params: dict, step: str, step_id: int, **kwargs):
+def make_step_public(params: dict, step: str, step_id: int, **kwargs):
     """
     Make public a genomic sequence step. The step is identified by the step name and its id.
     :param params:
@@ -407,7 +405,7 @@ def make_sample(params: dict, step: str, step_id: int, **kwargs):
 @get_params
 @log_params
 @required_token
-def share_sample_user(params: dict, step: str, step_id: int, **kwargs):
+def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     """
     Share a sample with another user. An user, owner of the sample, shares the sample with
     another user. A sample_id and an user_id (the invited user) are needed, also the access mode, that can be
@@ -461,7 +459,7 @@ def share_sample_user(params: dict, step: str, step_id: int, **kwargs):
 @get_params
 @log_params
 @required_token
-def unshare_sample_other_user(params: dict, step:str, step_id: int, user_uuid: int, **kwargs):
+def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str, **kwargs):
     """
     A user, the owner of a sample, stops sharing the sample with another user. A
     sample_id and an id_user (the invited user) are needed.
@@ -578,6 +576,5 @@ def unshare_step_group(params: dict, step: str, step_id: int, group_id: int, **k
                     mimetype="application/json")
 
 # ##############################################################
-#  End of sharing sequence steps handling
+#  End of sharing genomic sequence steps and samples handling
 # ##############################################################
-

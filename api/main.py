@@ -1,24 +1,16 @@
-import datetime
-import decimal
 import json
 import os
-import random
 from typing import Optional
 
-from flask import Flask, Response, send_from_directory, jsonify, request, make_response, abort, send_file
+from flask import Flask, Response
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_log_request_id import RequestID
-from sqlalchemy import literal
-from sympy.codegen.fnodes import literal_dp
-from werkzeug.utils import secure_filename
 
 from api import log
-from api.auth import required_token, verify_token
 from api.db.db import SQLALCHEMY_DATABASE_URI, DatabaseInstance
 from api.decorators import wrap_error, get_params, log_params
-from api.utils import to_dict
 
 # from api.db.models  # Do not import yet, the database must be initialized first
 
@@ -66,11 +58,6 @@ if db is not None:
     db.init_app(app)
 else:
     log.error('The database could not be initialized')
-
-# This has to be imported here
-# from api.db.models import Temperature, Ph, Salinity, Sample
-
-# from api.controllers.UserController import UserController
 
 @app.route("/")
 @wrap_error

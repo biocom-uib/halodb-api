@@ -11,7 +11,7 @@ from api.db.models import Sample, User_Shared_Sample, Group, User_Has_Group, Tem
     Method, Oxygen, Fraction, Target, Extraction, Assembly, Sequencing, Binning, Group_Shared_Sample, Project, User
 from api.field_utils import valid_field, fix_times, complementaries, supplementaries, multi_complementaries, \
     get_reference_tables, get_step_table, get_sharing_tables, is_file_field, get_file_name_field, get_stored_procedure, \
-    merge_extra_fields, sequence_step_sharings, filter_dict
+    merge_extra_fields, sequence_step_sharings, filter_dict, get_file_name_field_raw
 from api.utils import convert_to_dict, to_dict, normalize
 
 
@@ -138,7 +138,7 @@ class SampleController:
             raise Exception("The field is not a file")
 
         filedata = getattr(step, field)
-        filename = getattr(step, get_file_name_field(field))
+        filename = getattr(step, get_file_name_field_raw(field))
 
         return filename, open(os.path.join(UPLOADS_DIR, filedata), 'rb')
 
@@ -152,7 +152,7 @@ class SampleController:
             uuid_file = str(uuid.uuid4())
             setattr(step, field, uuid_file)
 
-        setattr(step, get_file_name_field(field), filename)
+        setattr(step, get_file_name_field_raw(field), filename)
         setattr(step, 'updated', datetime.datetime.now())
         file_data.save(os.path.join(UPLOADS_DIR, uuid_file))
 
@@ -168,7 +168,7 @@ class SampleController:
                 if not is_file_field(file_id):
                     raise Exception("The field {file_id} is not a file field")
 
-                filename_field = get_file_name_field(file_id)
+                filename_field = get_file_name_field(step, file_id)
 
                 step_to_edit = current_class.query.filter_by(id=step_id).first()
 
@@ -177,7 +177,6 @@ class SampleController:
 
                 cls.add_file(step_to_edit, file_id, file_data, filename_field, file_name)
 
-                # session.add(step_to_edit)
                 session.query(current_class).filter_by(id=step_id).update(step_to_edit.as_dict())
                 session.commit()
             except Exception as e:

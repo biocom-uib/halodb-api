@@ -46,6 +46,7 @@ def required_token(func: Callable) -> Callable:
 
 
 def not_required_token(func: Callable) -> Callable:
+    @wraps(func)
     def wrapper(*args, **kwargs):
         token = request.headers.get('Authorization')
         if token is not None:
@@ -57,3 +58,5 @@ def not_required_token(func: Callable) -> Callable:
             decoded_token = {'uuid': None}
 
         return func(*args, **kwargs, **decoded_token)
+
+    return wrapper

@@ -235,11 +235,11 @@ excluded_fields = {
 }
 
 file_fields = {
-    "rreads": "rrname",
-    "rreads2": "rrname2",
-    "treads": "trname",
-    "assembled": "assname",
-    "pgenes": "pgenesname"
+    "rreads": {"name": "rrname", "steps": ["RAW READS", "PEPTIDES"]},
+    "rreads2": {"name": "rrname2", "steps": ["RAW READS", "PEPTIDES"]},
+    "treads": {"name": "trname", "steps": ["TRIMMED READS"]},
+    "assembled": {"name": "assname", "steps": ["CONTIGS", "GENOME", "SINGLE CELL GENOME", "PLASMID"]},
+    "pgenes": {"name": "pgenesname", "steps": ["PREDICTED GENES"]},
 }
 
 forbidden_files = [
@@ -396,15 +396,26 @@ def is_file_field(field):
     """
     return field in file_fields.keys()
 
-
-def get_file_name_field(field):
+def get_file_name_field_raw(field):
     """
     Get the name of the field that stores the actual file name for a given field
     :param field:
     :return:
     """
     if is_file_field(field):
-        return file_fields[field]
+        return file_fields[field]['name']
+    return None
+
+def get_file_name_field(step, field):
+    """
+    Get the name of the field that stores the actual file name for a given field with the restriction of the step, that
+    is, the field has to be a file field and the step has to be in the list of valid steps for the field.
+    :param step:
+    :param field:
+    :return:
+    """
+    if is_file_field(field) and step in file_fields['field']['steps']:
+        return file_fields[field]['name']
     return None
 
 
@@ -415,7 +426,7 @@ def exclude_param_files(params: dict):
     :return:
     """
     return {k: v for k, v in params.items()
-            if k not in file_fields.keys() and k not in file_fields.values()}
+            if k not in file_fields.keys() and k not in file_fields.values()['name']}
 
 
 def exclude_forbidden_fields(params: dict, sequence: str = None, step: str = None):
@@ -458,7 +469,7 @@ def valid_field(field):
             is_valid = False
             break
     if is_valid:
-        for value in file_fields.values():
+        for value in file_fields.values()['name']:
             if value == field:
                 is_valid = False
                 break
