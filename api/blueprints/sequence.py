@@ -22,22 +22,22 @@ sequence_page = Blueprint('sequence_page', __name__)
 
 
 # ##############################################################
-# Genomic sequence steps and Sample handling
+# Omic sequence steps and Sample handling
 # ##############################################################
 
 def validate_sequence_step(sequence: str, step: str):
     """
-    Validate the metabolic sequence and the corresponding step. I one of them in not valid, abort the request.
+    Validate the omic sequence and the corresponding step. I one of them in not valid, abort the request.
     The sequence has to be a valid sequence and the step has to be a valid step for the sequence.
     :param sequence:
     :param step:
     :return:
     """
     if not is_valid_sequence(sequence):
-        abort(400, f"Genomic sequence '{sequence}' is not valid")
+        abort(400, f"Omic sequence '{sequence}' is not valid")
 
     if not are_valid_sequence_step(sequence, step):
-        abort(400, f"Step '{step}' is not valid in the genomic sequence '{sequence}'")
+        abort(400, f"Step '{step}' is not valid in the omic sequence '{sequence}'")
 
     return sequence, step
 
@@ -50,7 +50,7 @@ def validate_sequence_step(sequence: str, step: str):
 def upload_sequence_step(params: dict, step: str, **kwargs):
     """
     This method is used to create a new sequence step.
-    A metabolic sequence step has a context: the metabolic sequence to which it belongs. This value has to be provided
+    An omic sequence step has a context: the omic sequence to which it belongs. This value has to be provided
     as a parameter.
     :param params:
     :param step:
@@ -86,7 +86,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
     log.info('Request received for uploading a sequence')
 
     # The fields related to the files are treated in a special way.
-    # Then, they are not included in the creation of the sample.
+    # Then, they are not included in the creation of the omic sequence step.
     params = exclude_param_files(params)
     params = exclude_forbidden_fields(params, sequence, step)
 
@@ -114,6 +114,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
             # if a project has been provided, put its id in the sample data
             if project_id is not None:
                 params['project_id'] = project_id
+
             # if a source id has been provided, put it in the step data
             if source_id is not None:
                 params['source_id'] = source_id
@@ -122,7 +123,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
 
             message = {'status': 'success',
                        'message': f'{step} created',
-                       'sequence_step': SampleController.filter_description_fields(sequence_created)
+                       'step': SampleController.filter_description_fields(sequence_created)
                        }
             result_status = 200
         except Exception as e:
@@ -143,7 +144,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
 
 def get_user_and_step_by_uuid(sequence_step, uid, step_id):
     """
-    Given a user uid and a step id, return the user id and the sample.
+    Given a user uid and a step id, return the user id and the step data.
     if the sequence step can be accessed by the user.
 
     :param sequence_step: the step to be used
@@ -178,7 +179,7 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
 @required_token
 def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
     if 'sequence' not in params:
-        abort(400, "Genomic sequence not provided")
+        abort(400, "Omic sequence not provided")
 
     sequence = normalize(params['sequence'])
     step = normalize(step)
@@ -190,11 +191,11 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
 
     # step_id = params['id']
 
-    log.info(f'Request received for update the genomic sequence {step} with id {step_id}')
+    log.info(f'Request received for update the omic sequence {step} with id {step_id}')
 
     uid: str = kwargs['uid']
 
-    user_id, sample = get_user_and_step_by_uuid(step, uid, step_id)
+    user_id, _ = get_user_and_step_by_uuid(step, uid, step_id)
 
     access = SampleController.get_step_access_mode(step, user_id, step_id)
 
@@ -202,7 +203,7 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
         abort(403, f"User {user_id} doesn't have the privileges to modify the {step} with id {step_id}")
 
     # The fields related to the files are treated in a special way.
-    # Then, they are not included in the creation of the sample.
+    # Then, they are not included in the creation of the omic sequence step.
     params = exclude_param_files(params)
     params = exclude_forbidden_fields(params)
 
@@ -211,8 +212,8 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
         try:
             step_updated = SampleController.update_sequence_step(sequence, step, step_id, params)
             message = {'status': 'success',
-                       'message': '{sequence} sequence step updated',
-                       'sample': SampleController.filter_description_fields(step_updated)
+                       'message': f'{sequence} sequence {step} with id {step_id} updated',
+                       step: SampleController.filter_description_fields(step_updated)
                        }
             result_status = 200
         except Exception as e:
@@ -244,32 +245,30 @@ def get_step(params: dict, step: str, step_id: int, **kwargs):
     table = get_step_table(step)
 
     if uid is None:
-        log.info(f'Request received to get {step_id =} as public sample')
+        log.info(f'Request received to get {step_id =} as public {step}')
         the_step = SampleController.get_step_by_id(table, step_id)
 
         if the_step is None:
             abort(400, f'Sequence step {step} with id {step_id} not found')
 
         if not the_step.is_public:
-            abort(403, f"Genomic sequence step {step_id} is not public")
+            abort(403, f"Omic sequence step {step_id} is not public")
     else:
         user_id, the_step = get_user_and_step_by_uuid(table, uid, step_id)
 
         access = SampleController.get_access_mode(table, user_id, step_id)
         if access is None:
-            abort(403, f"User {user_id} doesn't have the privileges to get data from sample {step_id}")
+            abort(403, f"User {user_id} doesn't have the privileges to get data from {step} {step_id}")
 
-        log.info(f'user with {uid = } has requested sample with {step_id = }')
+        log.info(f'user with {uid = } has requested {step} with {step_id = }')
 
     message = {'status': 'success',
-               'sample': SampleController.filter_description_fields(the_step.as_dict())
+               step: SampleController.filter_description_fields(the_step.as_dict())
                }
     result_status = 200
     return Response(response=json.dumps(message, default=serialize_datetime),
                     status=result_status,
                     mimetype="application/json")
-
-    # return send_from_directory(sequence_page.config['static_folder'], mocked_sample_file)
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['PUT', 'PATCH'])
@@ -300,7 +299,6 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
         file = request.files['file']
         filename = secure_filename(file.filename)
 
-        # user_id, sample = get_user_and_sample_id_by_uuid(uid, step_id)
         user_id = UserController.get_user_by_uid(uid).id
         access = SampleController.get_step_access_mode(step, user_id, step_id)
         if access is None or access != 'readwrite':
@@ -308,7 +306,7 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
 
         SampleController.update_file(sequence, step, step_id, input_type, filename, file)
         message = {'status': 'success',
-                   'message': f'file for {input_type} ({filename}) added to sample'
+                   'message': f'file for {input_type} ({filename}) added to  the {step} {step_id}'
                    }
         result_status = 200
     except Exception as e:
@@ -329,7 +327,7 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
 @get_params
 @log_params
 @not_required_token
-def get_sample_file(params: dict, step: str, step_id:int, input_type: str, **kwargs):
+def get_step_file(params: dict, step: str, step_id:int, input_type: str, **kwargs):
     uid: str = kwargs['uid']
     # uid = not_required_token(False)
     table = get_step_table(step)
@@ -373,10 +371,10 @@ def get_sample_file(params: dict, step: str, step_id:int, input_type: str, **kwa
 @required_token
 def make_step_public(params: dict, step: str, step_id: int, **kwargs):
     """
-    Make public a genomic sequence step. The step is identified by the step name and its id.
+    Make public an omic sequence step. The step is identified by the step name and its id.
     :param params:
-    :param step: the genomic step of the sample.
-    :param step_id: the sample identifier.
+    :param step: the omic sequence step to be shared.
+    :param step_id: the step identifier.
     :return:
     """
     try:
@@ -407,17 +405,17 @@ def make_step_public(params: dict, step: str, step_id: int, **kwargs):
 @required_token
 def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     """
-    Share a sample with another user. An user, owner of the sample, shares the sample with
-    another user. A sample_id and an user_id (the invited user) are needed, also the access mode, that can be
+    Share an omic sequence step with another user. An user, owner of a concrete step, shares it with
+    another user. A step_id and a user_id (the invited user) are needed, also the access mode, that can be
     read o readwrite.
-    :param step: the genomic step of to take into account.
+    :param step: the omic step of to take into account.
     :param step_id: the step identifier.
     :param params:
         The data is received in a json format, with the following fields:
 
-            * step_id: the sample identifier, the integer unique identifier of the sample.
-            * user_id: the user with which share the sample.
-            * readwrite: True if the sample can be modified by user_id.
+            * step_id: the integer unique identifier of the step.
+            * user_id: the user with which share the step.
+            * readwrite: True if the invited user can modify the step.
 
     :return:
     """
@@ -461,12 +459,12 @@ def share_step_user(params: dict, step: str, step_id: int, **kwargs):
 @required_token
 def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str, **kwargs):
     """
-    A user, the owner of a sample, stops sharing the sample with another user. A
-    sample_id and an id_user (the invited user) are needed.
+    A user, the owner of a metabolic sequence step, stops sharing the step with another user. A
+    step and an id_user (the invited user) are needed.
     :param params:
-    :param step: the genomic step of the sample.
-    :param step_id: the sequence step identifier, the integer unique identifier of the sample.
-    :param user_uuid: the user with which unshare the sample.
+    :param step: the omic step of the omic sequence step.
+    :param step_id: the sequence step identifier, the integer unique identifier of the step.
+    :param user_uuid: the user with which unshare the step.
     :return:
     """
     try:
@@ -475,16 +473,16 @@ def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str
         uid = kwargs['uid']
         owner = UserController.get_user_by_uid(uid).id
 
-        # sample_id = params['sample_id']
+        # step_id = params['step_id']
         if step_id is None:
-            abort(400, 'No sample id provided')
+            abort(400, 'No omic sequence step id provided')
 
         # id_user = params['user_id']
         user_id = UserController.get_user_by_uid(user_uuid).id
         if user_id is None:
             abort(400, 'No invited user provided')
 
-        log.info(f"User {owner} stops sharing sample {step_id} with user {user_uuid}")
+        log.info(f"User {owner} stops sharing omic sequence step {step_id} with user {user_uuid}")
         SampleController.unshare_step_user(step, step_id, user_id)
 
         result = {"message": "OK"}
@@ -508,13 +506,14 @@ def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str
 @required_token
 def share_step_group(params: dict, step: str, step_id: int, **kwargs):
     """
-    Share a sample with a group. A user, owner of the sample, shares the sample with
-    a group. A sample_id and a group_id are needed.
+    Share an omic sequence step with a group. A user, owner of the omic sequence step, shares the step with
+    a group. A step_id and a group_id are needed.
 
     The data has to be in json format with the fields:
-    * sample_id: the sample identifier.
-    * group_id: the user to share the sample.
-    * readwrite: True if the sample can be modified by the members of the group.
+    * step_id: the omic sequence step identifier.
+    * group_id: the with which to share the step.
+    * readwrite: True if the step can be modified by the members of the group, or they are only allowed to read the
+                 corresponding data.
 
     :return:
     """
@@ -530,7 +529,7 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
 
         readwrite = params.get('readwrite', 0)
 
-        log.info(f"User {owner} share sample {step_id} with group {group_id} with "
+        log.info(f"User {owner} shares omic sequence step {step_id} with group {group_id} with "
                  f"{'readwrite' if readwrite else 'readonly'} access")
         SampleController.share_step_group(step, owner, step_id, group_id, readwrite)
 
@@ -551,11 +550,11 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
 @required_token
 def unshare_step_group(params: dict, step: str, step_id: int, group_id: int, **kwargs):
     """
-    Stops sharing the sample with a group. A sample_id and a group_id are needed.
+    Stops sharing the metabolic sequence step with a group. A step_id and a group_id are needed.
     :param params:
-    :param step: the genomic step of the sample.
-    :param step_id: the sample identifier.
-    :param group_id: the user to share the sample.
+    :param step: the omic sequence step to be considered.
+    :param step_id: the step identifier.
+    :param group_id: the user with which to share the data.
     :return:
     """
     try:
@@ -576,5 +575,5 @@ def unshare_step_group(params: dict, step: str, step_id: int, group_id: int, **k
                     mimetype="application/json")
 
 # ##############################################################
-#  End of sharing genomic sequence steps and samples handling
+#  End of sharing omic sequence steps and samples handling
 # ##############################################################
