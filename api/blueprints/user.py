@@ -20,12 +20,12 @@ user_page = Blueprint('user_page', __name__)
 # limiter = Limiter(get_remote_address)
 
 
-@user_page.route('/user/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@user_page.route('/user/', methods=['POST'])
 def add_user(params: dict, **kwargs):
     log.info('Request received for creating a new user')
 
@@ -49,20 +49,25 @@ def add_user(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@user_page.route('/user/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-def user_handle(params: dict, **kwargs):
+@user_page.route('/user/', methods=['GET', 'DELETE'])
+def user_handle(**kwargs):
+    """
+    Handles the GET and DELETE requests for a user.
+    :param kwargs:
+    :return:
+    """
     result_status = 200
     message = ''
 
     uid: str = kwargs['uid']
 
     if request.method == 'GET':
-        log.info(f'GET request received for user { uid = } with { params = }')
+        log.info(f'GET request received for user { uid = }')
         usr = UserController.get_user_by_uid(uid)
         message = usr
         result_status = 200
@@ -88,13 +93,19 @@ def user_handle(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@user_page.route('/user/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 # @required_token
+@user_page.route('/user/', methods=['PUT', 'PATCH'])
 def user_edit(params: dict, **kwargs):
+    """
+    Updates user information based on the provided user UID.
+    :param params:
+    :param kwargs:
+    :return:
+    """
     uid: str = kwargs['uid']
 
     log.info(f'PUT/PATCH request received for user {uid = } with {params = }')
@@ -125,16 +136,15 @@ def user_edit(params: dict, **kwargs):
 #  Querying information related to a user
 # ##############################################################
 
-@user_page.route('/user/list/<string:table>/', methods=['GET'])
-@get_params
+# @get_params
 @wrap_error
 @not_required_token
-def get_table_list_by_user(params: dict, query_table: str, **kwargs):
+@user_page.route('/user/list/<string:query_table>/', methods=['GET'])
+def get_table_list_by_user(query_table: str, **kwargs):
     """
     Given a user id and a related element (group, experiment, project or sample), return the list of elements related
      to the user. If no valid token, and the query is for samples, the list of public samples is returned.
-    :param params:
-    :param id: the user id.
+
     :param query_table: the table to get the related data.
     :return: the list of elements of the table related to the user. Or the list of public samples
     """

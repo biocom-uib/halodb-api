@@ -283,7 +283,7 @@ extra_values = [1, 0, 0, 0, 'read', None, None, None]
 
 def merge_extra_fields(element):
     """
-    Merge the extra fields to an element such a sample or a genomic sequence step
+    Merge the extra fields to an element such a sample or an omic sequence step
     :param element:
     :return:
     """
@@ -355,7 +355,7 @@ def are_valid_sequence_step(sequence: str, step: str) -> bool:
     """
     Test if a step is valid for a given sequence. That means the step has to be a key in the list of steps for the given
     sequence. The matching has to be exact.
-    :param sequence: The genomic sequence to take into account
+    :param sequence: The omic sequence to take into account
     :param step: The step to test if it's valid
     :return:
     """
@@ -434,8 +434,8 @@ def exclude_forbidden_fields(params: dict, sequence: str = None, step: str = Non
     Remove the list of parameters that are forbidden for a given sequence and step into the sequence.
      That is the fields that are acceptable for a given treatment and sequence are returned.
      Each field that is not acceptable is removed.
-    :param sequence: the genomic sequence to be considered
-    :param step: the step into the genomic sequence to be used
+    :param sequence: the omic sequence to be considered
+    :param step: the step into the omic sequence to be used
     :param params: the list of parameters to be filtered
     :return:
     """

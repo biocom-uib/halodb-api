@@ -38,14 +38,17 @@ general_page = Blueprint('general_page', __name__)
 # General handling
 # ##############################################################
 
-@general_page.route('/users/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
+@general_page.route('/users/', methods=['GET'])
 def users(params: dict, **kwargs):
     """
-    Returns the list of users currently registered in the system
+    Returns the list of users currently registered in the system.
+    TODO: This method should be protected and only available for admin users. Or also the information should be
+    restricted to the user itself. Or the provided information should be restricted (no password, no email, etc.)
+
     :param params:
     :param kwargs:
     :return:
@@ -65,11 +68,11 @@ def users(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@general_page.route('/groups/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
+@general_page.route('/groups/', methods=['GET'])
 def groups(params: dict, **kwargs):
     """
     Returns the list of groups currently defined in the system.
@@ -92,14 +95,14 @@ def groups(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@general_page.route('/sequences/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
+@general_page.route('/sequences/', methods=['GET'])
 def sequences_list():
     """
-    Returns the structure of the genomic sequences defined. By now, the sequences are hardcoded and are the following
+    Returns the structure of the omic sequences defined. By now, the sequences are hardcoded and are the following
 
     - METAGENOME: RAW READS, TRIMMED READS, CONTIGS, PREDICTED GENES, MAGS
     - METATRANSCRIPTOME: RAW READS, TRIMMED READS
@@ -126,45 +129,24 @@ def sequences_list():
                     status=result_status,
                     mimetype="application/json")
 
-# @general_page.route('/sequence/<string:seq>/', methods=['GET'])
-# @wrap_error
-# # @limiter.limit("100/minute")
-# @get_params
-# @log_params
-# def sequences_list(params: dict, seq:str, **kwargs):
-#     message = ''
-#     result_status = 200
-#     seq = normalize(seq)
-#     if seq not in sequences:
-#         error(f"Sequence {seq} not found", 404)
-#
-#     if request.method == 'GET':
-#         log.info('Request received for list of the sequence {seq}')
-#         resp = sequences[seq]
-#         message = json.dumps(resp, default=serialize_datetime)
-#         # message = json.dumps(resp, default=str)
-#         result_status = 200
-#
-#     return Response(response=message,
-#                     status=result_status,
-#                     mimetype="application/json")
 
-@general_page.route('/query/sequence/<string:name>/', methods=['GET'])
+
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
+@general_page.route('/query/sequence/<string:name>/', methods=['GET'])
 def get_sequence(name: str, **kwargs):
     """
-    Given a genomic sequence name, return the corresponding sequence steps
-    :param name: the name of the genomic sequence
+    Given an omic sequence name, return the corresponding omic sequence steps
+    :param name: the name of the omic sequence
     :param kwargs:
-    :return: the list of valid steps for the genomic sequence
+    :return: the list of valid steps for the omic sequence
     """
     name = normalize(name)
 
-    log.info('Request to get the genomic sequence related to {name}')
+    log.info('Request to get the omic sequence related to {name}')
 
     if name in sequences:
         return jsonify(sequences[name])
@@ -174,12 +156,13 @@ def get_sequence(name: str, **kwargs):
 
 valid_tables = {'temperature':Temperature, 'ph':Ph, 'salinity':Salinity}
 
-@general_page.route('/query/<string:table>/')
+
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
+@general_page.route('/query/<string:table>/')
 def get_table_data(table: str):
     """
     Returns the set of its categories and the corresponding range for a given classification.
@@ -205,12 +188,12 @@ def get_table_data(table: str):
 # ##############################################################
 # Category handling
 # ##############################################################
-@general_page.route('/query/<string:table>/<float:value>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
+@general_page.route('/query/<string:table>/<float:value>/', methods=['GET'])
 def get_classification_data(table: str, value: float):
     """
     Given a classification and a value, returns the range corresponding to the value.
