@@ -41,16 +41,15 @@ def validate_sequence_step(sequence: str, step: str):
 
     return sequence, step
 
-@sequence_page.route('/<string:step>/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@sequence_page.route('/<string:step>/', methods=['POST'])
 def upload_sequence_step(params: dict, step: str, **kwargs):
     """
-    This method is used to create a new sequence step.
-    An omic sequence step has a context: the omic sequence to which it belongs. This value has to be provided
+    This method is used to create a new omic sequence step. An omic sequence step has a context: the omic sequence to which it belongs. This value has to be provided
     as a parameter.
     :param params:
     :param step:
@@ -171,12 +170,12 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
     return user_id, step
 
 
-@sequence_page.route('/<string:step>/<int:step_id>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@sequence_page.route('/<string:step>/<int:step_id>/', methods=['PUT', 'PATCH'])
 def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
     if 'sequence' not in params:
         abort(400, "Omic sequence not provided")
@@ -232,13 +231,13 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
                     mimetype="application/json")
 
 
-@sequence_page.route('/<string:step>/<int:step_id>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# get_params
+# @log_params
 @not_required_token
-def get_step(params: dict, step: str, step_id: int, **kwargs):
+@sequence_page.route('/<string:step>/<int:step_id>/', methods=['GET'])
+def get_step(step: str, step_id: int, **kwargs):
     uid: str = kwargs['uid']
     # uid = not_required_token(False)
 
@@ -270,13 +269,12 @@ def get_step(params: dict, step: str, step_id: int, **kwargs):
                     status=result_status,
                     mimetype="application/json")
 
-
-@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 @required_token
+@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['PUT', 'PATCH'])
 def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
 
     uid: str = kwargs['uid']
@@ -320,13 +318,12 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
                     mimetype="application/json")
 
 
-
-@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @not_required_token
+@sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['GET'])
 def get_step_file(params: dict, step: str, step_id:int, input_type: str, **kwargs):
     uid: str = kwargs['uid']
     # uid = not_required_token(False)
@@ -362,17 +359,17 @@ def get_step_file(params: dict, step: str, step_id:int, input_type: str, **kwarg
 # ##########################
 # PUBLIC
 # ##########################
-
-@sequence_page.route('/<string:step>/<int:step_id>/share/public/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
+# @get_params
 #@log_params
 @required_token
-def make_step_public(params: dict, step: str, step_id: int, **kwargs):
+@sequence_page.route('/<string:step>/<int:step_id>/share/public/', methods=['PUT', 'PATCH'])
+
+def make_step_public(step: str, step_id: int, **kwargs):
     """
     Make public an omic sequence step. The step is identified by the step name and its id.
-    :param params:
+
     :param step: the omic sequence step to be shared.
     :param step_id: the step identifier.
     :return:
@@ -396,13 +393,13 @@ def make_step_public(params: dict, step: str, step_id: int, **kwargs):
 
 # ##########################
 # USERS
-# ##########################
-@sequence_page.route('/<string:step>/<int:step_id>/share/user/', methods=['PUT', 'PATCH'])
-@wrap_error
+# ##########################@wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@sequence_page.route('/<string:step>/<int:step_id>/share/user/', methods=['PUT', 'PATCH'])
+
 def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     """
     Share an omic sequence step with another user. An user, owner of a concrete step, shares it with
@@ -450,18 +447,17 @@ def share_step_user(params: dict, step: str, step_id: int, **kwargs):
                     status=200,
                     mimetype="application/json")
 
-
-@sequence_page.route('/<string:step>/<int:step_id>/share/user/<string:user_uuid>/', methods=['DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @required_token
-def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str, **kwargs):
+@sequence_page.route('/<string:step>/<int:step_id>/share/user/<string:user_uuid>/', methods=['DELETE'])
+def unshare_step_other_user(step:str, step_id: int, user_uuid: str, **kwargs):
     """
     A user, the owner of a metabolic sequence step, stops sharing the step with another user. A
     step and an id_user (the invited user) are needed.
-    :param params:
+
     :param step: the omic step of the omic sequence step.
     :param step_id: the sequence step identifier, the integer unique identifier of the step.
     :param user_uuid: the user with which unshare the step.
@@ -498,12 +494,12 @@ def unshare_step_other_user(params: dict, step:str, step_id: int, user_uuid: str
 # GROUPS
 # ##############
 
-@sequence_page.route('/<string:step>/<int:step_id>/share/group/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@sequence_page.route('/<string:step>/<int:step_id>/share/group/', methods=['PUT', 'PATCH'])
 def share_step_group(params: dict, step: str, step_id: int, **kwargs):
     """
     Share an omic sequence step with a group. A user, owner of the omic sequence step, shares the step with
@@ -541,14 +537,13 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
                     status=200,
                     mimetype="application/json")
 
-
-@sequence_page.route('/<string:step>/<int:step_id>/share/group/<int:group_id>/', methods=['DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @required_token
-def unshare_step_group(params: dict, step: str, step_id: int, group_id: int, **kwargs):
+@sequence_page.route('/<string:step>/<int:step_id>/share/group/<int:group_id>/', methods=['DELETE'])
+def unshare_step_group(step: str, step_id: int, group_id: int, **kwargs):
     """
     Stops sharing the metabolic sequence step with a group. A step_id and a group_id are needed.
     :param params:

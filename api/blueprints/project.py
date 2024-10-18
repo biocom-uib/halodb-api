@@ -22,11 +22,11 @@ project_page = Blueprint('project_page', __name__)
 # ##############################################################
 # Project handling
 # ##############################################################
-@project_page.route('/project/', methods=['GET', 'POST'])
 @wrap_error
 # # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
+@project_page.route('/project/', methods=['GET', 'POST'])
 @required_token
 def create_project(params: dict, **kwargs):
     # TODO: link to user
@@ -61,34 +61,41 @@ def create_project(params: dict, **kwargs):
                     mimetype="application/json")
 
 
-@project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @required_token
-def project_handle(params: dict, id: Optional[int] = None, **kwargs):
-    # TODO: link to user
+@project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
+def project_handle(project_id: Optional[int] = None, **kwargs):
+    """
+    Handle the project with the given id. (Retrieves or deletes it)
+    If no project_id is provided, return a list of all projects for the user.
+    TODO: link to user. Only the user that created the project should be able to delete it.
+    :param project_id:
+    :param kwargs:
+    :return:
+    """
     result_status = 200
     message = ''
 
     if request.method == 'GET':
-        log.info(f'GET request received for project {id = } with {params = }')
-        prj = ProjectController.get_project_by_id(id)
+        log.info(f'GET request received for project {project_id = }')
+        prj = ProjectController.get_project_by_id(project_id)
         message = prj
         result_status = 200
 
     if request.method == 'DELETE':
-        log.info(f'DELETE request received for project {id = }')
+        log.info(f'DELETE request received for project {project_id = }')
         try:
-            ProjectController.delete_project(id)
+            ProjectController.delete_project(project_id)
             message = {'status': 'success',
                        'message': 'Project deleted'
                        }
             result_status = 200
-            log.info(f'Project with {id = } deleted')
+            log.info(f'Project with {project_id = } deleted')
         except Exception as e:
-            log.info(f'Error deleting project with {id = }: {str(e)}')
+            log.info(f'Error deleting project with {project_id = }: {str(e)}')
             message = {'status': 'error',
                        'message': str(e)
                        }
@@ -99,12 +106,12 @@ def project_handle(params: dict, id: Optional[int] = None, **kwargs):
                     mimetype="application/json")
 
 
-@project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
+@project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
 def project_edit(params: dict, id: Optional[int] = None, **kwargs):
     # TODO: link to user
     log.info(f'PUT/PATCH request received for project {id = } with {params = }')
@@ -133,19 +140,26 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
                     mimetype="application/json")
 
 
-@project_page.route('/project/<int:id>/list/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-def project_get_experiments(params: dict, id: Optional[int] = None, **kwargs):
-    # TODO: link to user
+@project_page.route('/project/<int:id>/list/', methods=['GET'])
+def project_get_samples(params: dict, id: Optional[int] = None, **kwargs):
+    """
+    Retrieves a list of samples related to the project.
+    TODO: link to user
+    :param params:
+    :param id:
+    :param kwargs:
+    :return:
+    """
     result_status = 200
     message = ''
 
     # if request.method == 'GET':
-    #     log.info(f'GET request received for experiments in project {id = } with {params = }')
+    #     log.info(f'GET request received for samples in project {id = } with {params = }')
     #     experiments = ExperimentController.get_by_project(id, params['project_id'])
     #     message = experiments
     #     result_status = 200
