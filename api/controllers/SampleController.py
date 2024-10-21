@@ -115,6 +115,11 @@ class SampleController:
         #             sample[key] = [e.description for e in element]
         #         else:
         #             sample[key] = None
+        ## Keywords
+        if 'keywords' in sample:
+            keywords = sample['keywords']
+            if keywords is not None:
+                sample['keywords'] = [k.keyword for k in keywords]
 
         return sample
 

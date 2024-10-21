@@ -47,7 +47,7 @@ def required_token(func: Callable) -> Callable:
 
 def not_required_token(func: Callable) -> Callable:
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def filter_auth(*args, **kwargs):
         token = request.headers.get('Authorization')
         if token is not None:
             if not token.startswith('Bearer '):
@@ -59,4 +59,4 @@ def not_required_token(func: Callable) -> Callable:
 
         return func(*args, **kwargs, **decoded_token)
 
-    return wrapper
+    return filter_auth

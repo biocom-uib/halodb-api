@@ -561,20 +561,21 @@ COLLATE = utf8mb4_0900_ai_ci;
 DROP TABLE IF EXISTS `halodb`.`sample_has_keywords` ;
 
 CREATE TABLE IF NOT EXISTS `halodb`.`sample_has_keywords` (
-  `sample_id` INT NOT NULL,
-  `keywords_id` VARCHAR(45) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NOT NULL,
-  PRIMARY KEY (`sample_id`, `keywords_id`),
-  INDEX `fk_sample_has_keywords_keywords_1_idx` (`keywords_id` ASC),
-  INDEX `fk_sample_has_keywords_sample_1_idx` (`sample_id` ASC),
-  CONSTRAINT `fk_sample_has_keywords_keywords_1`
-    FOREIGN KEY (`keywords_id`)
-    REFERENCES `halodb`.`keywords` (`id`),
-  CONSTRAINT `fk_sample_has_keywords_sample_1`
-    FOREIGN KEY (`sample_id`)
-    REFERENCES `halodb`.`sample` (`id`))
+`sample_id` INT NOT NULL,
+`keyword_id` INT NOT NULL,
+PRIMARY KEY (`sample_id`, `keyword_id`),
+INDEX `fk_sample_has_keywords_keyword_1_idx` (`keyword_id` ASC),
+INDEX `fk_sample_has_keywords_sample_1_idx` (`sample_id` ASC),
+CONSTRAINT `fk_sample_has_keywords_keyword_1`
+  FOREIGN KEY (`keyword_id`)
+      REFERENCES `halodb`.`keywords` (`id`),
+CONSTRAINT `fk_sample_has_keywords_sample_1`
+  FOREIGN KEY (`sample_id`)
+      REFERENCES `halodb`.`sample` (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
+
 
 
 -- -----------------------------------------------------

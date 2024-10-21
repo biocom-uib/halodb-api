@@ -34,9 +34,9 @@ COLLATE = utf8mb4_0900_ai_ci;
 DROP TABLE IF EXISTS `halodb`.`keywords` ;
 
 CREATE TABLE IF NOT EXISTS `halodb`.`keywords` (
-  `id` VARCHAR(45) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NOT NULL,
-  `keyword` VARCHAR(50) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NOT NULL,
-  PRIMARY KEY (`id`))
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `keyword` VARCHAR(50) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NOT NULL,
+    PRIMARY KEY (`id`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
