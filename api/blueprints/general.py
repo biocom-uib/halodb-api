@@ -1,36 +1,21 @@
 import json
-import datetime
-
-from sqlalchemy import func
-
-from flask import jsonify, abort, send_file
 
 from flask import Blueprint
 from flask import Response, request
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
+from flask import jsonify
+from sqlalchemy import func
 
 from api import log
-from api.auth import required_token, verify_token, not_required_token
 from api.controllers.GroupController import GroupController
-
-from api.controllers.SampleController import SampleController
 from api.controllers.UserController import UserController
-from api.db import db
-from api.db.models import Sample, Temperature, Ph, Salinity, Experiment, Trimmed_Reads, Contigs, Predicted_Genes, Mags, \
-    Contigs_Virus, Genome, Single_Cell, Plasmid
-from api.db.db import DatabaseInstance
-
+from api.db.models import Temperature, Ph, Salinity
 from api.decorators import wrap_error, get_params, log_params, error, ok_message
-from api.field_utils import valid_field, sequences
+from api.field_utils import sequences
 from api.utils import serialize_datetime, normalize
 from api.utils import to_dict
 
-from werkzeug.utils import secure_filename
-
 general_page = Blueprint('general_page', __name__)
 
-# limiter = Limiter(get_remote_address)
 
 
 
@@ -38,11 +23,11 @@ general_page = Blueprint('general_page', __name__)
 # General handling
 # ##############################################################
 
+@general_page.route('/users/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
-@general_page.route('/users/', methods=['GET'])
 def users(params: dict, **kwargs):
     """
     Returns the list of users currently registered in the system.
@@ -68,11 +53,11 @@ def users(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@general_page.route('/groups/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
-@general_page.route('/groups/', methods=['GET'])
 def groups(params: dict, **kwargs):
     """
     Returns the list of groups currently defined in the system.
@@ -95,11 +80,11 @@ def groups(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@general_page.route('/sequences/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
-@general_page.route('/sequences/', methods=['GET'])
 def sequences_list():
     """
     Returns the structure of the omic sequences defined. By now, the sequences are hardcoded and are the following
@@ -131,17 +116,16 @@ def sequences_list():
 
 
 
+@general_page.route('/query/sequence/<string:name>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
-@general_page.route('/query/sequence/<string:name>/', methods=['GET'])
-def get_sequence(name: str, **kwargs):
+def get_sequence(name: str): # , **kwargs
     """
     Given an omic sequence name, return the corresponding omic sequence steps
     :param name: the name of the omic sequence
-    :param kwargs:
     :return: the list of valid steps for the omic sequence
     """
     name = normalize(name)
@@ -157,12 +141,12 @@ def get_sequence(name: str, **kwargs):
 valid_tables = {'temperature':Temperature, 'ph':Ph, 'salinity':Salinity}
 
 
+@general_page.route('/query/<string:table>/')
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
-@general_page.route('/query/<string:table>/')
 def get_table_data(table: str):
     """
     Returns the set of its categories and the corresponding range for a given classification.
@@ -188,12 +172,12 @@ def get_table_data(table: str):
 # ##############################################################
 # Category handling
 # ##############################################################
+@general_page.route('/query/<string:table>/<float:value>/', methods=['GET'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 # @required_token
-@general_page.route('/query/<string:table>/<float:value>/', methods=['GET'])
 def get_classification_data(table: str, value: float):
     """
     Given a classification and a value, returns the range corresponding to the value.

@@ -20,12 +20,12 @@ user_page = Blueprint('user_page', __name__)
 # limiter = Limiter(get_remote_address)
 
 
+@user_page.route('/user/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-@user_page.route('/user/', methods=['POST'])
 def add_user(params: dict, **kwargs):
     log.info('Request received for creating a new user')
 
@@ -49,12 +49,12 @@ def add_user(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@user_page.route('/user/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-@user_page.route('/user/', methods=['GET', 'DELETE'])
 def user_handle(**kwargs):
     """
     Handles the GET and DELETE requests for a user.
@@ -93,12 +93,12 @@ def user_handle(**kwargs):
                     mimetype="application/json")
 
 
+@user_page.route('/user/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
-# @required_token
-@user_page.route('/user/', methods=['PUT', 'PATCH'])
+@required_token
 def user_edit(params: dict, **kwargs):
     """
     Updates user information based on the provided user UID.
@@ -136,10 +136,10 @@ def user_edit(params: dict, **kwargs):
 #  Querying information related to a user
 # ##############################################################
 
+@user_page.route('/user/list/<string:query_table>/', methods=['GET'])
 # @get_params
 @wrap_error
 @not_required_token
-@user_page.route('/user/list/<string:query_table>/', methods=['GET'])
 def get_table_list_by_user(query_table: str, **kwargs):
     """
     Given a user id and a related element (group, experiment, project or sample), return the list of elements related

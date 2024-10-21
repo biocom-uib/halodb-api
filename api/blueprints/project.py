@@ -22,11 +22,11 @@ project_page = Blueprint('project_page', __name__)
 # ##############################################################
 # Project handling
 # ##############################################################
+@project_page.route('/project/', methods=['GET', 'POST'])
 @wrap_error
 # # @limiter.limit("100/minute")
 # @get_params
 # @log_params
-@project_page.route('/project/', methods=['GET', 'POST'])
 @required_token
 def create_project(params: dict, **kwargs):
     # TODO: link to user
@@ -61,12 +61,12 @@ def create_project(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 @required_token
-@project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
 def project_handle(project_id: Optional[int] = None, **kwargs):
     """
     Handle the project with the given id. (Retrieves or deletes it)
@@ -106,12 +106,12 @@ def project_handle(project_id: Optional[int] = None, **kwargs):
                     mimetype="application/json")
 
 
+@project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-@project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
 def project_edit(params: dict, id: Optional[int] = None, **kwargs):
     # TODO: link to user
     log.info(f'PUT/PATCH request received for project {id = } with {params = }')
@@ -141,11 +141,11 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
 
 
 @wrap_error
+@project_page.route('/project/<int:id>/list/', methods=['GET'])
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-@project_page.route('/project/<int:id>/list/', methods=['GET'])
 def project_get_samples(params: dict, id: Optional[int] = None, **kwargs):
     """
     Retrieves a list of samples related to the project.

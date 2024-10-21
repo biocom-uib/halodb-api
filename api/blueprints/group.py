@@ -16,12 +16,12 @@ group_page = Blueprint('group_page', __name__)
 
 # limiter = Limiter(get_remote_address)
 
+@group_page.route('/group/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 @required_token
-@group_page.route('/group/', methods=['POST'])
 def add_group(**kwargs):
     log.info('Request received for creating a new group')
 
@@ -54,12 +54,12 @@ def add_group(**kwargs):
                     mimetype="application/json")
 
 
+@group_page.route('/group/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
 @log_params
 @required_token
-@group_page.route('/group/', methods=['GET', 'DELETE'])
 def group_handle(params: dict, **kwargs):
     """
     With the method GET: Get the data of a given group (if the param 'id' is provided) or the list of groups of a user.
@@ -141,12 +141,12 @@ def group_handle(params: dict, **kwargs):
                     mimetype="application/json")
 
 
+@group_page.route('/group/<int:group_id>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 @required_token
-@group_page.route('/group/<int:group_id>/', methods=['PUT', 'PATCH'])
 def group_edit(group_id: int, **kwargs):
     uid: str = kwargs['uid']
 
@@ -195,10 +195,10 @@ def group_edit(group_id: int, **kwargs):
 #  Querying information related to a user
 # ##############################################################
 
+@group_page.route('/group/<string:table>/list/', methods=['GET'])
 @get_params
 @wrap_error
 @not_required_token
-@group_page.route('/group/<string:table>/list/', methods=['GET'])
 def get_table_list_by_user(table: str, **kwargs):
     """
     Given a user id and a related element (group, experiment, project or sample), return the list of elements related
@@ -244,12 +244,12 @@ def get_table_list_by_user(table: str, **kwargs):
 # ##############################################################
 # Group invitation handling
 # ##############################################################
+@group_page.route('/group/<int:group>/invitation/', methods=['PUT', 'PATCH', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
 # @get_params
 # @log_params
 @required_token
-@group_page.route('/group/<int:group>/invitation/', methods=['PUT', 'PATCH', 'DELETE'])
 def accept(group: int, **kwargs):
     """
     Accept or reject an invitation to join a group, if the request is a DELETE, the invitation is rejected
@@ -274,9 +274,9 @@ def accept(group: int, **kwargs):
                     mimetype="application/json")
 
 
+@group_page.route('/group/<int:group>/invite/<string:invited_uid>/', methods=['POST'])
 @wrap_error
 @required_token
-@group_page.route('/group/<int:group>/invite/<string:invited_uid>/', methods=['POST'])
 def invite(group: int, invited_uid: int,  **kwargs):
     """
     Invite a user to join a group
