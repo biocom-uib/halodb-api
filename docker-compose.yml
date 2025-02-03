@@ -27,5 +27,5 @@ services:
       - ./sql:/docker-entrypoint-initdb.d:ro
 
 secrets:
-  firebase_credentials:
-    file: secrets/firebase_credentials.json
+  credentials:
+    file: secrets/credentials.json
