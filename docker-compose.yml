@@ -7,14 +7,14 @@ services:
     depends_on:
       - db
     environment:
-      FIREBASE_CREDENTIALS_FILE: /run/secrets/firebase_credentials
+      FIREBASE_CREDENTIALS_FILE: /run/secrets/credentials
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
       MYSQL_PORT: 3306
       TMPDIR: /opt/halodb-api/tmp
       UPLOADS_DIR: /opt/halodb-api/uploads
     secrets:
-      - firebase_credentials
+      - credentials
 
   db:
     image: mysql:8.0

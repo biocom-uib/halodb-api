@@ -164,10 +164,6 @@ def get_table_data(table: str):
         o2_list = to_dict(o2)
         return ok_message(message=o2_list)
 
-        # return Response(response=json.dumps(o2_list),
-        #                 status=200,
-        #                 mimetype="application/json")
-
 
 # ##############################################################
 # Category handling

@@ -27,7 +27,7 @@ sequence_page = Blueprint('sequence_page', __name__)
 
 def validate_sequence_step(sequence: str, step: str):
     """
-    Validate the omic sequence and the corresponding step. I one of them in not valid, abort the request.
+    Validate the omic sequence and the corresponding step. If one of them in not valid, abort the request.
     The sequence has to be a valid sequence and the step has to be a valid step for the sequence.
     :param sequence:
     :param step:
@@ -136,9 +136,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
                    'fields': invalid}
         result_status = 400
 
-    return Response(response=json.dumps(message, default=str),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=str), result_status
 
 
 def get_user_and_step_by_uuid(sequence_step, uid, step_id):
@@ -226,9 +224,7 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
                    'fields': invalid}
         result_status = 400
 
-    return Response(response=json.dumps(message, default=str),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=str), result_status
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/', methods=['GET'])
@@ -252,7 +248,7 @@ def get_step(step: str, step_id: int, **kwargs):
             abort(400, f'Sequence step {step} with id {step_id} not found')
 
         if not the_step.is_public:
-            abort(403, f"Omic sequence step {step_id} is not public")
+            abort(403, f"Omic sequence step {step} with id {step_id} is not public")
     else:
         user_id, the_step = get_user_and_step_by_uuid(step, uid, step_id)
 
@@ -266,9 +262,8 @@ def get_step(step: str, step_id: int, **kwargs):
                step: SampleController.filter_description_fields(the_step.as_dict())
                }
     result_status = 200
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+
+    return message, result_status
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['PUT', 'PATCH'])
@@ -315,9 +310,7 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=serialize_datetime), result_status
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['GET'])
@@ -367,7 +360,6 @@ def get_step_file(step: str, step_id:int, input_type: str, **kwargs):
 # @get_params
 #@log_params
 @required_token
-
 def make_step_public(step: str, step_id: int, **kwargs):
     """
     Make public an omic sequence step. The step is identified by the step name and its id.
@@ -388,9 +380,7 @@ def make_step_public(step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result) ,200
 
 
 # ##########################
@@ -404,7 +394,7 @@ def make_step_public(step: str, step_id: int, **kwargs):
 @required_token
 def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     """
-    Share an omic sequence step with another user. An user, owner of a concrete step, shares it with
+    Share an omic sequence step with another user. A user, owner of a concrete step, shares it with
     another user. A step_id and a user_id (the invited user) are needed, also the access mode, that can be
     read o readwrite.
     :param step: the omic step of to take into account.
@@ -445,9 +435,7 @@ def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result), 200
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/share/user/<string:user_uuid>/', methods=['DELETE'])
@@ -488,9 +476,7 @@ def unshare_step_other_user(step:str, step_id: int, user_uuid: str, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result), 200
 
 
 # ##############
@@ -536,9 +522,7 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result), 200
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/share/group/<int:group_id>/', methods=['DELETE'])
@@ -568,9 +552,7 @@ def unshare_step_group(step: str, step_id: int, group_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result), 200
 
 # ##############################################################
 #  End of sharing omic sequence steps and samples handling

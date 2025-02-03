@@ -1,18 +1,21 @@
 import json
+import datetime
 
-from flask import Blueprint, abort
+import jwt
+from flask import Blueprint, abort, jsonify
 from flask import Response, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from api import log
-from api.auth import required_token, not_required_token
+from api.auth import required_token, not_required_token, generate_valid_token
 from api.controllers.GroupController import GroupController
 from api.controllers.ProjectController import ProjectController
 from api.controllers.SampleController import SampleController
 from api.controllers.UserController import UserController
 from api.decorators import wrap_error, get_params, log_params
 from api.field_utils import get_step_table
+from api.main import app
 from api.utils import serialize_datetime
 
 user_page = Blueprint('user_page', __name__)
@@ -20,12 +23,33 @@ user_page = Blueprint('user_page', __name__)
 # limiter = Limiter(get_remote_address)
 
 
-@user_page.route('/user/', methods=['POST'])
+
+# User login
+@user_page.route('/login', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params
+# @log_params
+def login(params: dict, **kwargs):
+    email = params['email']
+    password = params['password']
+
+    user = UserController.validate_user(email, password)
+
+    if user is None:
+        return jsonify({'message': 'Invalid username or password'}), 401
+
+    token = generate_valid_token(user.uid)
+
+    return jsonify({'token': token}), 200
+
+
+# @limiter.limit("100/minute")
+@user_page.route('/user/', methods=['POST'])
+@wrap_error
+@get_params
 @log_params
-@required_token
+@not_required_token
 def add_user(params: dict, **kwargs):
     log.info('Request received for creating a new user')
 
@@ -44,10 +68,7 @@ def add_user(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
-
+    return json.dumps(message, default=serialize_datetime), result_status
 
 @user_page.route('/user/', methods=['GET', 'DELETE'])
 @wrap_error
@@ -88,10 +109,7 @@ def user_handle(**kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
-
+    return json.dumps(message, default=serialize_datetime), result_status
 
 @user_page.route('/user/', methods=['PUT', 'PATCH'])
 @wrap_error
@@ -127,10 +145,7 @@ def user_edit(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
-
+    return json.dumps(message, default=serialize_datetime), result_status
 
 # ##############################################################
 #  Querying information related to a user
@@ -175,7 +190,4 @@ def get_table_list_by_user(query_table: str, **kwargs):
         else:
             result = SampleController.get_shared_with_user(query_table, user_id)
 
-    return Response(response=json.dumps(result, default=serialize_datetime),
-                    status=200,
-                    mimetype="application/json")
-
+    return json.dumps(result, default=serialize_datetime), 200

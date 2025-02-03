@@ -28,38 +28,15 @@ class SampleController:
     def get_sample_by_id(cls, sample_id: int):
         sample = Sample.query.get(sample_id)
         return sample
-        # if sample is not None:
-        #     return sample.as_dict()
-        # else:
-        #     return None
-
-        # with DatabaseInstance.get().session() as session:
-        #     stmt = select(Sample).filter_by(id=sample_id)
-        #     sample = session.execute(stmt).first()
-        #     if sample is not None:
-        #         sample = sample[0]
-        #
-        # return sample
 
     @classmethod
     def get_step_by_id(cls, table, step_id: int):
         value = table.query.get(step_id)
         return value
-        # if value is not None:
-        #     return value.as_dict()
-        # else:
-        #     return None
-        #return table.query.get(step_id).first().as_dict()
 
     @classmethod
     def get_samples_owned_by_user(cls, user_id: int):
         Sample.query.filter_by(user_id=user_id).all()
-
-        # with DatabaseInstance.get().session() as session:
-        #     stmt = select(Sample).filter_by(user_id=user_id)
-        #     samples = session.execute(stmt).all()
-        #
-        # return samples
 
     @classmethod
     def test_description_fields(cls, sample):
@@ -161,9 +138,8 @@ class SampleController:
         setattr(step, 'updated', datetime.datetime.now())
         file_data.save(os.path.join(UPLOADS_DIR, uuid_file))
 
-
     @classmethod
-    def update_file(cls, sequence:str, step: str, step_id: int, file_id: str, file_name: str, file_data: bytes):
+    def update_file(cls, sequence: str, step: str, step_id: int, file_id: str, file_name: str, file_data: bytes):
 
         # Get the reference tables for the sequence and the step
         current_class, parent_class = get_reference_tables(sequence, step)
@@ -194,8 +170,6 @@ class SampleController:
             try:
                 fix_times(new_data)
 
-                # sample_to_edit = Sample.query.get(sample_id)
-
                 sample_to_edit = Sample.query.filter_by(id=sample_id).first()
                 if sample_to_edit is None:
                     raise Exception("Sample with id {sample_id} not found")
@@ -205,10 +179,6 @@ class SampleController:
                         setattr(sample_to_edit, key, value)
 
                 setattr(sample_to_edit, 'updated', datetime.datetime.now())
-
-                # session.query(Sample).filter_by(id=sample_to_edit.id).update(sample_to_edit.as_dict())
-                # update(Sample).filter_by(id=sample_id).update(sample_to_edit.as_dict())
-                # session.update(Sample).where(Sample.id == sample_id).values(sample_to_edit.as_dict())
 
                 session.query(Sample).filter_by(id=sample_id).update(sample_to_edit.as_dict())
                 session.commit()
@@ -267,7 +237,6 @@ class SampleController:
                 session.rollback()
                 raise e
 
-
     @classmethod
     def get_access_mode(cls, table, user_id, step_id: int):
         # accessible_list = cls.get_samples_shared_with_user(user_id)
@@ -318,24 +287,36 @@ class SampleController:
         if step.user_id == user_id:
             return 'readwrite'
 
-        # sharing_groups_table, sharing_users_table = get_sharing_tables(sequence_step)
+        sharing = get_sharing_tables(sequence_step)
+        sharing_groups_table = sharing['group']
+        sharing_users_table = sharing['user']
 
-        for shared_user in step.user_shared_experiment:
-            if shared_user.user_id == user_id:
+        if sharing_users_table is not None:
+            shared_user = sharing_users_table.query.filter(
+                sharing_users_table.user_id == step.user_id and sharing_users_table.shared_id == step_id).first()
+            if shared_user is not None:
                 return shared_user.access_mode
 
-        for shared_group in step.group_shared_experiment:
-            for user_group in shared_group.group.user_has_group:
-                if user_id.id == user_group.user_id and user_group.relation != 'invited':
-                    return shared_group.access_mode
+        if sharing_groups_table is not None:
+            for shared_group in sharing_groups_table.query.filter(sharing_groups_table.shared_id == step_id):
+                for user_group in shared_group.group.user_has_group:
+                    if user_id.id == user_group.user_id and user_group.relation != 'invited':
+                        return shared_group.access_mode
+
+        # for shared_user in step.user_shared_experiment:
+        #    if shared_user.user_id == user_id:
+        #        return shared_user.access_mode
+
+        # for shared_group in step.group_shared_experiment:
+        #    for user_group in shared_group.group.user_has_group:
+        #        if user_id.id == user_group.user_id and user_group.relation != 'invited':
+        #            return shared_group.access_mode
 
         return None
-
 
     @classmethod
     def list_samples(cls):
         return to_dict(Sample.query.all())
-
 
     @classmethod
     def list_public(cls, step):
@@ -344,7 +325,6 @@ class SampleController:
 
         result = [cls.filter_description_fields(merge_extra_fields(element.as_dict())) for element in result]
         return result
-
 
     @classmethod
     def make_public(cls, step, step_id, owner):
@@ -479,7 +459,7 @@ class SampleController:
                     raise Exception(f"User {user_id} doesn't have access to the sequence step {step} with id {step_id}")
                 # TODO: this doesn't work. the database is not updated
                 # session.delete(shared_step)
-                delete(shared_table).where(shared_table.shared_id==step_id).where(shared_table.user_id==user_id)
+                delete(shared_table).where(shared_table.shared_id == step_id).where(shared_table.user_id == user_id)
                 # session.delete(shared_table).where(shared_id=step_id).where(user_id=user_id)
                 session.commit()
             except Exception as e:

@@ -27,6 +27,7 @@ Base = automap_base()
 def pluralize_collection(base, local_cls, referred_cls, constraint):
     return referred_cls.__name__.lower()
 
+
 class DatabaseInstance:
     _instance = None
 
@@ -62,8 +63,8 @@ class DatabaseInstance:
     @staticmethod
     def wait_for_connection_and_create_instance(wait_time: int, attempts: int) -> Optional[Self]:
         if DatabaseInstance._instance is not None:
-            # return DatabaseInstance._instance
-            raise RuntimeError('The global instance already exists')
+            return DatabaseInstance._instance, False
+            # raise RuntimeError('The global instance already exists')
 
         def connect():
             return MySQLdb.connect(
@@ -80,11 +81,11 @@ class DatabaseInstance:
                         if c.execute('select 1;'):
                             instance = DatabaseInstance()
                             DatabaseInstance._instance = instance
-                            return instance
+                            return instance, True
             except MySQLdb.OperationalError as e:
                 (code, message) = e.args
 
-                if code == 2002: # CR_CONNECTION_ERROR
+                if code == 2002:  # CR_CONNECTION_ERROR
                     log.info(f'Could not connect to the DB ({message}). Waiting...')
                 else:
                     raise

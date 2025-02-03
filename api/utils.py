@@ -5,9 +5,6 @@ import re
 from flask import request, abort
 from sqlalchemy.orm import class_mapper
 
-from api.auth import verify_token
-
-
 def normalize(element: str) -> str:
     """
     Normalize the element by converting it to uppercase and replacing the underscores by spaces.
@@ -45,11 +42,6 @@ def to_dict(rows):
         return rows
 
     return [row.as_dict() for row in rows]
-
-    # column_names = rows[0]._mapping
-    # return [convert_to_dict(row, column_names) for row in rows]
-
-    # return [dict(row._mapping) for row in rows]
 
 
 def convert_to_dict(row, column_names):
