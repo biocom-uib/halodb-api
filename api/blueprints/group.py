@@ -7,6 +7,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from api import log
+
 from api.auth import required_token, not_required_token
 from api.controllers.GroupController import GroupController
 from api.controllers.UserController import UserController

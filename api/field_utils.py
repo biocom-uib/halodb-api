@@ -242,6 +242,8 @@ file_fields = {
     "pgenes": {"name": "pgenesname", "steps": ["PREDICTED GENES"]},
 }
 
+file_fields_names = { "rrname", "rrname2", "trname", "assname", "pgenesname"}
+
 forbidden_files = [
     "created", "updated", "id", "is_public", "source_id", "project_id", "user_id"
 ]
@@ -300,7 +302,8 @@ def get_stored_procedure(step: str):
 
 def is_valid_sequence(sequence: str) -> bool:
     """
-    Test if a sequence is valid, that means it's a key in the sequences dictionary. The matching has to be exact.
+    Test if a sequence is valid, that means it's a key in the sequences dictionary.
+    The matching has to be exact.
     :param sequence:
     :return:
     """
@@ -422,11 +425,12 @@ def get_file_name_field(step, field):
 def exclude_param_files(params: dict):
     """
     Given a list of parameters, remove the params that are related to files.
-    :param params:
-    :return:
+    :param params: the list of params to filter.
+    :return: the params received, but excluding those related to files.
     """
     return {k: v for k, v in params.items()
-            if k not in file_fields.keys() and k not in file_fields.values()['name']}
+            if k not in file_fields.keys() and k not in file_fields_names}
+            # if k not in file_fields.keys() and k not in file_fields.values()['name']}
 
 
 def exclude_forbidden_fields(params: dict, sequence: str = None, step: str = None):
@@ -502,7 +506,6 @@ def filter_dict(data: dict):
     """
     Extract the keys from a dictionary
     :param data: the dictionary to extract the keys from
-    :param keys: the keys to be extracted
     :return: a dictionary with the extracted keys
     """
     return {k: v for k, v in data.items() if k not in not_to_return}
@@ -541,7 +544,7 @@ def get_step_table(step: str):
 
 def get_sharing_tables(sequence_step: str):
     """
-    Get the sharing tables associated with a sequence step
+    Get the sharing tables associated with a sequence step.
     :param sequence_step:
     :return:
     """
