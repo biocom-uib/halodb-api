@@ -544,7 +544,7 @@ def get_step_table(step: str):
 
 def get_sharing_tables(sequence_step: str):
     """
-    Get the sharing tables associated with a sequence step
+    Get the sharing tables associated with a sequence step.
     :param sequence_step:
     :return:
     """
