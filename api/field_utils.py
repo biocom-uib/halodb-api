@@ -242,6 +242,8 @@ file_fields = {
     "pgenes": {"name": "pgenesname", "steps": ["PREDICTED GENES"]},
 }
 
+file_fields_names = { "rrname", "rrname2", "trname", "assname", "pgenesname"}
+
 forbidden_files = [
     "created", "updated", "id", "is_public", "source_id", "project_id", "user_id"
 ]
@@ -426,7 +428,8 @@ def exclude_param_files(params: dict):
     :return:
     """
     return {k: v for k, v in params.items()
-            if k not in file_fields.keys() and k not in file_fields.values()['name']}
+            if k not in file_fields.keys() and k not in file_fields_names}
+            # if k not in file_fields.keys() and k not in file_fields.values()['name']}
 
 
 def exclude_forbidden_fields(params: dict, sequence: str = None, step: str = None):
@@ -502,7 +505,6 @@ def filter_dict(data: dict):
     """
     Extract the keys from a dictionary
     :param data: the dictionary to extract the keys from
-    :param keys: the keys to be extracted
     :return: a dictionary with the extracted keys
     """
     return {k: v for k, v in data.items() if k not in not_to_return}
