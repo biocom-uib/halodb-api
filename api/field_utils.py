@@ -425,8 +425,8 @@ def get_file_name_field(step, field):
 def exclude_param_files(params: dict):
     """
     Given a list of parameters, remove the params that are related to files.
-    :param params: the list of params to filter
-    :return:
+    :param params: the list of params to filter.
+    :return: the params received, but excluding those related to files.
     """
     return {k: v for k, v in params.items()
             if k not in file_fields.keys() and k not in file_fields_names}
