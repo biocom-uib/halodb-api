@@ -55,10 +55,7 @@ def create_project(params: dict, **kwargs):
                        }
             result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=str), result_status
 
 
 @project_page.route('/project/<int:id>/', methods=['GET', 'DELETE'])
@@ -101,9 +98,7 @@ def project_handle(project_id: Optional[int] = None, **kwargs):
                        }
             result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=serialize_datetime), result_status
 
 
 @project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
@@ -134,10 +129,7 @@ def project_edit(params: dict, id: Optional[int] = None, **kwargs):
                    }
         result_status = 400
 
-    # return Response(response=json.dumps(message, default=serialize_datetime),
-    return Response(response=json.dumps(message, default=str),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=str), result_status
 
 
 @wrap_error
@@ -164,7 +156,5 @@ def project_get_samples(params: dict, id: Optional[int] = None, **kwargs):
     #     message = experiments
     #     result_status = 200
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=serialize_datetime), result_status
 

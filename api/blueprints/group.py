@@ -6,6 +6,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from api import log
+
 from api.auth import required_token, not_required_token
 from api.controllers.GroupController import GroupController
 from api.controllers.UserController import UserController
@@ -19,10 +20,10 @@ group_page = Blueprint('group_page', __name__)
 @group_page.route('/group/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
-# @get_params
+@get_params
 # @log_params
 @required_token
-def add_group(**kwargs):
+def add_group(params: dict, **kwargs):
     log.info('Request received for creating a new group')
 
     try:
@@ -49,10 +50,7 @@ def add_group(**kwargs):
                    }
         result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
-
+    return json.dumps(message, default=serialize_datetime), result_status
 
 @group_page.route('/group/', methods=['GET', 'DELETE'])
 @wrap_error
@@ -136,9 +134,7 @@ def group_handle(params: dict, **kwargs):
                                }
                     result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=serialize_datetime), result_status
 
 
 @group_page.route('/group/<int:group_id>/', methods=['PUT', 'PATCH'])
@@ -150,7 +146,7 @@ def group_handle(params: dict, **kwargs):
 def group_edit(group_id: int, **kwargs):
     uid: str = kwargs['uid']
 
-    log.info(f'PUT/PATCH request received for group {group_id = } from user with uid {uid} with {params = }')
+    log.info(f'PUT/PATCH request received for group {group_id = } from user with uid {uid}') # with {params = }
 
     user = UserController.get_user_by_uid(uid)
 
@@ -159,13 +155,13 @@ def group_edit(group_id: int, **kwargs):
     relation = GroupController.get_relation(user.id, group_id)
     if relation is None:
         message = {'status': 'error',
-                   'message': 'The user with uid {uid} doesn\'t belong to the group {group_id}'
+                   'message': f'The user with uid {uid} doesn\'t belong to the group {group_id}'
                    }
         result_status = 400
     else:
         if relation != 'owner':
             message = {'status': 'error',
-                       'message': 'User with {uid =} is not the owner of the group {group_id} and can\'t edit it'
+                       'message': f'User with {uid =} is not the owner of the group {group_id} and can\'t edit it'
                        }
             result_status = 400
         else:
@@ -186,9 +182,7 @@ def group_edit(group_id: int, **kwargs):
                            }
                 result_status = 400
 
-    return Response(response=json.dumps(message, default=serialize_datetime),
-                    status=result_status,
-                    mimetype="application/json")
+    return json.dumps(message, default=serialize_datetime), result_status
 
 
 # ##############################################################
@@ -235,10 +229,8 @@ def get_table_list_by_user(table: str, **kwargs):
     ##     else:
     ##         abort(405, f"Table {table} not found")
     result = []
-    return Response(response=json.dumps(result, default=serialize_datetime),
-                    status=200,
-                    mimetype="application/json")
 
+    return json.dumps(result, default=serialize_datetime), 200
 
 
 # ##############################################################
@@ -252,7 +244,7 @@ def get_table_list_by_user(table: str, **kwargs):
 @required_token
 def accept(group: int, **kwargs):
     """
-    Accept or reject an invitation to join a group, if the request is a DELETE, the invitation is rejected
+    Accept or reject an invitation to join a group, if the request is DELETE, the invitation is rejected
 
     :param group: the group identifier
     :return:
@@ -269,10 +261,7 @@ def accept(group: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
-
+    return json.dumps(result), 200
 
 @group_page.route('/group/<int:group>/invite/<string:invited_uid>/', methods=['POST'])
 @wrap_error
@@ -295,7 +284,5 @@ def invite(group: int, invited_uid: int,  **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return Response(response=json.dumps(result),
-                    status=200,
-                    mimetype="application/json")
+    return json.dumps(result), 200
 

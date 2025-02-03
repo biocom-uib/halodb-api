@@ -16,14 +16,14 @@ The following directories are mounted as volumes and must to belong to the user 
 - `volumes/tmp/`
 - `volumes/uploads/`
 
-In addition, the Firebase credentials JSON should be placed into `secrets/firebase_credentials.json`.
+In addition, the credentials JSON should be placed into `secrets/credentials.json`.
 
 Therefore, to get the API running from scratch, the process is as follows:
 
 ```bash
 cd halodb-api
 mkdir -p volumes/{mysql_data,tmp,uploads} secrets
-cp /path/to/firebase/credentials.json secrets/firebase_credentials.json
+cp /path/to/credentials.json secrets/credentials.json
 sudo chown -R 1021:1002 volumes
 docker compose up --build
 ```
