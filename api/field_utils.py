@@ -302,7 +302,8 @@ def get_stored_procedure(step: str):
 
 def is_valid_sequence(sequence: str) -> bool:
     """
-    Test if a sequence is valid, that means it's a key in the sequences dictionary. The matching has to be exact.
+    Test if a sequence is valid, that means it's a key in the sequences dictionary.
+    The matching has to be exact.
     :param sequence:
     :return:
     """
