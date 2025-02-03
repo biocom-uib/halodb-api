@@ -424,7 +424,7 @@ def get_file_name_field(step, field):
 def exclude_param_files(params: dict):
     """
     Given a list of parameters, remove the params that are related to files.
-    :param params:
+    :param params: the list of params to filter
     :return:
     """
     return {k: v for k, v in params.items()
