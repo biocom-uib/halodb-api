@@ -473,7 +473,7 @@ def valid_field(field):
             is_valid = False
             break
     if is_valid:
-        for value in file_fields.values()['name']:
+        for value in file_fields_names:
             if value == field:
                 is_valid = False
                 break
