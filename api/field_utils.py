@@ -482,6 +482,8 @@ def valid_field(field):
 
 
 not_to_return = ["user", "group",
+                 "password",
+                 "author", "project", "user_has_group",
                  "sample", "experiment", "trimmed_reads", "contigs", "predicted_genes", "mags",
                  "contigs_virus", "genome", "single_cell", "plasmid",
                  "user_shared_sample", "group_shared_sample",

@@ -1,7 +1,12 @@
 from sqlalchemy import select
+# from werkzeug.security import generate_password_hash, check_password_hash
+
+import uuid
 
 from api.db.db import DatabaseInstance
 from api.db.models import User, Sample, Author
+from api.field_utils import filter_dict
+from api.main import bcrypt
 from api.utils import to_dict
 
 
@@ -31,7 +36,7 @@ class UserController:
         :param uid: the (unique) uid of the user.
         :return: the user if it exists, None otherwise.
         """
-        return User.query.filter(User.uid == uid).first() # .as_dict()
+        return User.query.filter(User.uid == uid).first()  # .as_dict()
         # return User.get_by_uid(uid)
 
     @classmethod
@@ -41,7 +46,23 @@ class UserController:
         :param email: the email of the user.
         :return: the user if it exists, None otherwise.
         """
-        return User.get_by_email(email)
+        return User.query.filter(User.email == email).first()
+
+    @classmethod
+    def validate_user(cls, email: str, passwd: str):
+        """
+        Test if there exists a user with the email and the password provided
+        :param email: the email of the user
+        :param passwd: the password
+        :return: the user data if it exists o None otherwise
+        """
+        user = UserController.get_user_by_email(email)
+
+        # if not user or not check_password_hash(user.password, passwd):
+        if not user or not bcrypt.check_password_hash(user.password, passwd):
+            return None
+        else:
+            return user
 
     @classmethod
     def create_user(cls, params: dict):
@@ -54,20 +75,26 @@ class UserController:
         new_user.email = params['email']
         new_user.name = params['name']
         new_user.surname = params['surname']
-        new_user.uid = params['uid']
-        if 'password' in params:
-            new_user.password = params['password']
-        else:
-            new_user.password = ""
+
+        # encrypt the password
+        # new_user.password = generate_password_hash(params['password'], method='sha256')
+        new_user.password = bcrypt.generate_password_hash(params['password']).decode('utf-8')
+
+        user_created = None
 
         with DatabaseInstance.get().session() as session:
             try:
-                # Check if the uid is already in use. The uid has to be unique,
-                # so no two users can have the same uid
-                stmt = select(User).filter_by(uid=new_user.uid)
-                test = session.execute(stmt).first()
-                if test is not None:
-                    raise Exception(f'The uid "{new_user.uid}" is already in use')
+                # # Check if the uid is already in use. The uid has to be unique,
+                # # so no two users can have the same uid
+                # stmt = select(User).filter_by(uid=new_user.uid)
+                # test = session.execute(stmt).first()
+                # if test is not None:
+                #     raise Exception(f'The uid "{new_user.uid}" is already in use')
+
+                # Generate a random uid for the user. It has to be unique.
+                new_user.uid = str(uuid.uuid4())  # params['uid']
+                while User.query.filter(User.uid == new_user.uid).first() is not None:
+                    new_user.uid = str(uuid.uuid4())
 
                 # Check if the email is already in use. The email has to be unique,
                 # so no two users can have the same email
@@ -77,16 +104,19 @@ class UserController:
                     raise Exception(f'The email "{new_user.email}" is already in use')
 
                 session.add(new_user)
+                session.flush()
+                user_created = new_user.as_dict()
                 session.commit()
 
-                stmt = select(User).filter_by(uid=new_user.uid)
-                user_created = session.execute(stmt).first()
-                # user_created = user_created[0]
+                # stmt = select(User).filter_by(uid=new_user.uid)
+                # user_created = session.execute(stmt).first()
+                user_created = filter_dict(user_created)
+
             except Exception as e:
                 session.rollback()
                 raise e
 
-        return user_created.as_dict()
+        return user_created
 
     @classmethod
     def update_user(cls, uid: str, new_data: dict):
