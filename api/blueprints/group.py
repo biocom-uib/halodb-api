@@ -1,4 +1,5 @@
 import json
+from idlelib.debugger_r import restart_subprocess_debugger
 
 from flask import Blueprint
 from flask import Response, request
