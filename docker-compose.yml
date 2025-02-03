@@ -7,7 +7,7 @@ services:
     depends_on:
       - db
     environment:
-      FIREBASE_CREDENTIALS_FILE: /run/secrets/credentials
+      CREDENTIALS_FILE: /run/secrets/credentials
       MYSQL_DATABASE: halodb
       MYSQL_USER: halodb
       MYSQL_PORT: 3306
