@@ -101,7 +101,7 @@ def project_handle(project_id: Optional[int] = None, **kwargs):
     return json.dumps(message, default=serialize_datetime), result_status
 
 
-@project_page.route('/project/<int:id>', methods=['PUT', 'PATCH'])
+@project_page.route('/project/<int:id>/', methods=['PUT', 'PATCH'])
 @wrap_error
 # @limiter.limit("100/minute")
 @get_params

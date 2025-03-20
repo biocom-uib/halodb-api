@@ -14,7 +14,7 @@ from api.controllers.ProjectController import ProjectController
 from api.controllers.SampleController import SampleController
 from api.controllers.UserController import UserController
 from api.decorators import wrap_error, get_params, log_params
-from api.field_utils import get_step_table
+from api.field_utils import get_step_table, filter_dict
 from api.main import app
 from api.utils import serialize_datetime
 
@@ -68,13 +68,14 @@ def add_user(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return json.dumps(message, default=serialize_datetime), result_status
+    # return json.dumps(message, default=serialize_datetime), result_status
+    return message, result_status
 
 @user_page.route('/user/', methods=['GET', 'DELETE'])
 @wrap_error
 # @limiter.limit("100/minute")
-@get_params
-@log_params
+# @get_params
+# @log_params
 @required_token
 def user_handle(**kwargs):
     """
@@ -90,7 +91,7 @@ def user_handle(**kwargs):
     if request.method == 'GET':
         log.info(f'GET request received for user { uid = }')
         usr = UserController.get_user_by_uid(uid)
-        message = usr
+        message = filter_dict(usr.as_dict())
         result_status = 200
 
     if request.method == 'DELETE':
@@ -109,7 +110,8 @@ def user_handle(**kwargs):
                        }
             result_status = 400
 
-    return json.dumps(message, default=serialize_datetime), result_status
+    return message, result_status
+    # return json.dumps(message, default=serialize_datetime), result_status
 
 @user_page.route('/user/', methods=['PUT', 'PATCH'])
 @wrap_error
@@ -130,11 +132,11 @@ def user_edit(params: dict, **kwargs):
 
     request_form = json.loads(request.data)
     try:
-        UserController.update_user(uid, request_form)
+        returned = UserController.update_user(uid, request_form)
         updated = UserController.get_user_by_uid(uid)
         message = {'status': 'success',
                    'message': 'User updated',
-                   'user': updated
+                   'user': filter_dict(updated.as_dict())
                    }
         result_status = 200
         log.info(f'User with id = {updated.id} updated')
@@ -145,7 +147,8 @@ def user_edit(params: dict, **kwargs):
                    }
         result_status = 400
 
-    return json.dumps(message, default=serialize_datetime), result_status
+    return message, result_status
+    # return json.dumps(message, default=serialize_datetime), result_status
 
 # ##############################################################
 #  Querying information related to a user
@@ -165,7 +168,10 @@ def get_table_list_by_user(query_table: str, **kwargs):
     """
     uid: str = kwargs['uid']
     # uid = not_required_token(False)
-    table = get_step_table(query_table)
+    if query_table in ['groups', 'projects']:
+        table = query_table
+    else:
+        table = get_step_table(query_table)
 
     if uid is None:
         if table is not None:
@@ -188,6 +194,7 @@ def get_table_list_by_user(query_table: str, **kwargs):
         # elif query_table == "samples":
         #     result = SampleController.get_samples_shared_with_user(user_id)
         else:
-            result = SampleController.get_shared_with_user(query_table, user_id)
+            result = SampleController.get_shared_with_user(query_table.upper(), user_id)
 
-    return json.dumps(result, default=serialize_datetime), 200
+    return result, 200
+    # return json.dumps(result, default=serialize_datetime), 200

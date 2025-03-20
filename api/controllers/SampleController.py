@@ -485,18 +485,22 @@ class SampleController:
                 fix_times(data)
 
                 if 'project_id' in data:
-                    project = Project.query.get(data['project_id'])
-                    if project is None:
-                        raise Exception("Project not found")
-                    found = False
-                    for test in Project.users:
-                        if test.id == user_id:
-                            found = True
-                            break
-                    if not found:
-                        raise Exception("User is not associated with the project")
+                    # Make sure there is a valid project id, no an empty one
+                    if len(data['project_id']) == 0:
+                        data.pop('project_id')
+                    else:
+                        project = Project.query.get(data['project_id'])
+                        if project is None:
+                            raise Exception("Project not found")
+                        found = False
+                        for test in Project.users:
+                            if test.id == user_id:
+                                found = True
+                                break
+                        if not found:
+                            raise Exception("User is not associated with the project")
 
-                    step_to_create.project_id = project
+                        step_to_create.project_id = project
                 # else:
                 #    step_to_create.project_id = None
 
@@ -510,10 +514,10 @@ class SampleController:
                 data['user_id'] = user_id
 
                 session.add(step_to_create)
-
+                session.flush()
+                result = step_to_create.as_dict()
                 session.commit()
 
-                result = step_to_create.as_dict()
                 result = filter_dict(result)
 
                 return result

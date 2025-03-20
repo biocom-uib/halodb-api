@@ -136,7 +136,8 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
                    'fields': invalid}
         result_status = 400
 
-    return json.dumps(message, default=str), result_status
+    #return json.dumps(message, default=str), result_status
+    return message, result_status
 
 
 def get_user_and_step_by_uuid(sequence_step, uid, step_id):
@@ -224,7 +225,8 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
                    'fields': invalid}
         result_status = 400
 
-    return json.dumps(message, default=str), result_status
+    #return json.dumps(message, default=str), result_status
+    return message, result_status
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/', methods=['GET'])
@@ -310,7 +312,8 @@ def upload_step_file(step: str, step_id: int, input_type: str, **kwargs):
                    }
         result_status = 400
 
-    return json.dumps(message, default=serialize_datetime), result_status
+    #return json.dumps(message, default=serialize_datetime), result_status
+    return message, result_status
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/<string:input_type>/', methods=['GET'])
@@ -380,8 +383,8 @@ def make_step_public(step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return json.dumps(result) ,200
-
+    #return json.dumps(result) ,200
+    return result ,200
 
 # ##########################
 # USERS
@@ -435,7 +438,8 @@ def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return json.dumps(result), 200
+    #return json.dumps(result), 200
+    return result, 200
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/share/user/<string:user_uuid>/', methods=['DELETE'])
@@ -476,7 +480,8 @@ def unshare_step_other_user(step:str, step_id: int, user_uuid: str, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return json.dumps(result), 200
+    #return json.dumps(result), 200
+    return result, 200
 
 
 # ##############
@@ -522,7 +527,8 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return json.dumps(result), 200
+    #return json.dumps(result), 200
+    return result, 200
 
 
 @sequence_page.route('/<string:step>/<int:step_id>/share/group/<int:group_id>/', methods=['DELETE'])
@@ -552,7 +558,8 @@ def unshare_step_group(step: str, step_id: int, group_id: int, **kwargs):
     except Exception as e:
         result = {"message": f"ERROR: {e}"}
 
-    return json.dumps(result), 200
+    #return json.dumps(result), 200
+    return result, 200
 
 # ##############################################################
 #  End of sharing omic sequence steps and samples handling

@@ -144,8 +144,8 @@ class UserController:
                     user_to_edit.password = new_data['password']
                 # uid is an internal identifier, it should not be changed
                 # so this last condition is not really necessary
-                if 'uid' in new_data:
-                    user_to_edit.uid = new_data['uid']
+                #if 'uid' in new_data:
+                #    user_to_edit.uid = new_data['uid']
 
                 # Check if the uid is already in use. The uid has to be unique,
                 # so no two users can have the same uid
@@ -168,7 +168,7 @@ class UserController:
                 raise e
 
         # It may be necessary avoid the lazy loading of the user's samples
-        return user_to_edit.as_dict()
+        return filter_dict(user_to_edit.as_dict())
 
     @classmethod
     def delete_user(cls, uid: str):
