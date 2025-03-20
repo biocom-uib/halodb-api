@@ -1,7 +1,7 @@
 import datetime
 import json
 from functools import wraps
-from flask import request, abort, Response
+from flask import request, abort, Response, jsonify
 from typing import Callable
 
 
@@ -83,7 +83,8 @@ def required_token(func: Callable) -> Callable:
             abort(401, 'No token provided')
         if not token.startswith('Bearer '):
             abort(401, 'Invalid token type')
-        decoded_token = verify_token(token.split(' ')[1], True)
+        token = token.split(' ')[1]
+        decoded_token = verify_token(token, True)
 
         payload, status = func(*args, **kwargs, **decoded_token)
 

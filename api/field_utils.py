@@ -536,6 +536,7 @@ def get_step_table(step: str):
     :param step:
     :return:
     """
+    step = step.upper()
     if step in sequence_step_to_table:
         return sequence_step_to_table[step]['table']
     else:
@@ -548,6 +549,7 @@ def get_sharing_tables(sequence_step: str):
     :param sequence_step:
     :return:
     """
+    sequence_step = sequence_step.upper()
     if sequence_step in sequence_step_sharings:
         return sequence_step_sharings[sequence_step]
     else:

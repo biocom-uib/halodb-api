@@ -51,7 +51,9 @@ class ProjectController:
                 # projects = session.execute(stmt).all()
                 projects = user.projects
 
-        return to_dict(projects)
+                projects = [{'project_id': prj[0], 'name': prj[1], 'description': prj[2]} for prj in projects]
+
+        return projects
 
     @classmethod
     def get_project_by_id(cls, project_id: int):

@@ -1,5 +1,4 @@
 import datetime
-from distutils.core import setup
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -39,9 +38,11 @@ class GroupController:
                           Group.id, Group.name, Group.description).join_from(Group, User_Has_Group).where(
                 User_Has_Group.user_id == user_id)
             groups = session.execute(stmt).all()
-            the_user = User.query.filter(User.id == user_id).first()
 
-            groups = to_dict(the_user.groups)
+            groups = [{'relation': grp[0], 'group_id': grp[1], 'name': grp[2], 'description': grp[3]} for grp in groups]
+
+            # the_user = User.query.filter(User.id == user_id).first()
+            # groups = to_dict(the_user.groups)
 
         return groups
 
