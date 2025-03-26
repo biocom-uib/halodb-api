@@ -8,7 +8,8 @@ from sqlalchemy import func
 from api import log
 from api.controllers.GroupController import GroupController
 from api.controllers.UserController import UserController
-from api.db.models import Temperature, Ph, Salinity
+from api.db.models import Temperature, Ph, Salinity, Target, Method, Extraction, Assembly, Sequencing, Binning, Oxygen, \
+    Fraction
 from api.decorators import wrap_error, get_params, log_params, error, ok_message
 from api.field_utils import sequences
 from api.utils import serialize_datetime, normalize
@@ -139,7 +140,16 @@ def get_sequence(name: str): # , **kwargs
 
 
 valid_tables = {'temperature':Temperature, 'ph':Ph, 'salinity':Salinity}
-
+complementary_valid_tables = {
+    "method": Method,
+    "dna": Extraction,
+    "assembly": Assembly,
+    "sequencing": Sequencing,
+    "binning": Binning,
+    "oxygen": Oxygen,
+    "fraction": Fraction,
+    "target": Target
+}
 
 @general_page.route('/query/<string:table>/')
 @wrap_error
@@ -157,10 +167,13 @@ def get_table_data(table: str):
     """
     table = table.lower()
 
-    if table not in valid_tables:
+    if table not in valid_tables and table not in complementary_valid_tables:
         error(f"Table {table} not found", 404)
     else:
-        o2 = valid_tables[table].query.all()
+        if table in valid_tables:
+            o2 = valid_tables[table].query.all()
+        else:
+            o2 = complementary_valid_tables[table].query.all()
         o2_list = to_dict(o2)
         return ok_message(message=o2_list)
 

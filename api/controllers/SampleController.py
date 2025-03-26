@@ -38,6 +38,10 @@ class SampleController:
     def get_samples_owned_by_user(cls, user_id: int):
         Sample.query.filter_by(user_id=user_id).all()
 
+
+    #TODO: get_experiment_steps return the list of the ids of steps available given an experiment and a user id
+
+
     @classmethod
     def test_description_fields(cls, sample):
         # Test if the fields that are supposed to be ids to other tables are valid

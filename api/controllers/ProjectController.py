@@ -77,11 +77,11 @@ class ProjectController:
         :return:
         """
 
-        project_to_create = Experiment('')
+        project_to_create = Project()
         project_to_create.from_dict(data)
         with DatabaseInstance.get().session() as session:
             try:
-                # In order to have clarity, no two groups can have the same name
+                # In order to have clarity, no two projects can have the same name
                 test = cls._get_project_by_name(project_to_create.name, session)
                 if test is not None:
                     raise Exception(f'The project name "{project_to_create.name}" is already in use')
