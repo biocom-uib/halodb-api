@@ -25,7 +25,7 @@ project_page = Blueprint('project_page', __name__)
 @project_page.route('/project/', methods=['GET', 'POST'])
 @wrap_error
 # # @limiter.limit("100/minute")
-# @get_params
+@get_params
 # @log_params
 @required_token
 def create_project(params: dict, **kwargs):
