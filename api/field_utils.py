@@ -417,7 +417,7 @@ def get_file_name_field(step, field):
     :param field:
     :return:
     """
-    if is_file_field(field) and step in file_fields['field']['steps']:
+    if is_file_field(field) and step in file_fields[field]['steps']:
         return file_fields[field]['name']
     return None
 
