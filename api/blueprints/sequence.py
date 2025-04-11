@@ -345,7 +345,9 @@ def get_step_file(step: str, step_id:int, input_type: str, **kwargs):
 
     if access is not None:
         filename, filedata = SampleController.get_file_data(the_step, input_type)
-        return send_file(filedata, download_name=filename)
+        return send_file(filedata, download_name=filename), 200
+
+
     else:
         abort(403, f'User {user_id} has no access to the sequence step {step}')
 
