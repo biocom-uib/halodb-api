@@ -125,8 +125,14 @@ class SampleController:
 
         filedata = getattr(step, field)
         filename = getattr(step, get_file_name_field_raw(field))
+        if filedata is None or filename is None:
+            raise Exception("The file is not set")
+        if not os.path.exists(os.path.join(UPLOADS_DIR, filedata)):
+            raise Exception("The file doesn't exist")
 
-        return filename, open(os.path.join(UPLOADS_DIR, filedata), 'rb')
+        #return filename, open(os.path.join(UPLOADS_DIR, filedata), 'rb')
+        return filename, os.path.abspath(os.path.join(UPLOADS_DIR, filedata))
+
 
     @classmethod
     def add_file(cls, step, field, file_data, filename_field, filename):

@@ -112,6 +112,11 @@ def not_required_token(func: Callable) -> Callable:
 
         payload, status = func(*args, **kwargs, **decoded_token)
 
+        # Test is payload is already a Response object (that means it was already processed)
+        # and the status is 200, then send the payload as is
+        if type(payload) is Response and status == 200:
+            return payload
+
         if token is not None:
             message = {'message':payload, 'token':update_token(decoded_token, token)}
         else:
