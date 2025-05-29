@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import select
 # from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -75,6 +77,7 @@ class UserController:
         new_user.email = params['email']
         new_user.name = params['name']
         new_user.surname = params['surname']
+        new_user.verified = 0
 
         # encrypt the password
         # new_user.password = generate_password_hash(params['password'], method='sha256')
@@ -117,6 +120,40 @@ class UserController:
                 raise e
 
         return user_created
+
+    @classmethod
+    def verify_user(cls, uid: str, creation_date: str):
+        """
+        Test if a user exists and is not previously verified, then mark the user as verified
+        :param uid: the uid of the user
+        :param creation_date: the value of the creation date
+        :return:
+        """
+        user_to_edit = None
+        with DatabaseInstance.get().session() as session:
+            try:
+                stmt = select(User).filter_by(uid=uid)
+                usr = session.execute(stmt).first()
+                if usr is None:
+                    raise Exception("User not found")
+
+                user_to_verify = usr[0]
+
+                if user_to_verify.verified != 0:
+                    raise Exception("User already verified")
+
+                provided_date =user_to_verify.registration_time.strftime('%Y-%m-%d %H:%M:%S')
+                if provided_date != creation_date:
+                    raise Exception("Wrong verification data")
+
+                user_to_verify.verified = 1
+
+                session.add(user_to_verify)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                raise e
 
     @classmethod
     def update_user(cls, uid: str, new_data: dict):

@@ -210,6 +210,7 @@ excluded_fields = {
     "GENOME PROCARIOTA": {
         "RAW READS": ["meca", "gsiz", "sfrac"],
         "GENOME": [],
+
         "PREDICTED GENES": []
     },
     "GENOME VIRUS": {
