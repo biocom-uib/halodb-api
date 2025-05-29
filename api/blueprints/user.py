@@ -38,10 +38,43 @@ def login(params: dict, **kwargs):
 
     if user is None:
         return jsonify({'message': 'Invalid username or password'}), 401
+    if user.verified == 0:
+        return jsonify({'message': 'user not yet verified'}), 401
 
     token = generate_valid_token(user.uid)
 
     return jsonify({'token': token}), 200
+
+
+@user_page.route('/verify/', methods=['PUT'])
+@wrap_error
+@get_params
+@log_params
+def verify_user(params: dict, **kwargs):
+    log.info('Verification of a new user')
+    try:
+        uid = params['uid']
+        creation_date = params['date']
+        if UserController.verify_user(uid, creation_date):
+            message = {'status': 'success',
+                       'message': 'User verified'
+                       }
+            result_status = 200
+            log.info(f'User with uid "{uid}" verified')
+        else:
+            message = {'status': 'failure',
+                       'message': 'user not verified'
+                       }
+            result_status = 400
+    except Exception as e:
+        message = {'status': 'error',
+                   'message': str(e)
+                   }
+        result_status = 400
+
+    # return json.dumps(message, default=serialize_datetime), result_status
+    return message, result_status
+
 
 
 # @limiter.limit("100/minute")
@@ -61,7 +94,7 @@ def add_user(params: dict, **kwargs):
                    }
         result_status = 200
         uid = new_user['uid']
-        log.info(f'User with uid "{uid}" created')
+        log.info(f'User with uid "{uid}" created, not yet verified')
     except Exception as e:
         message = {'status': 'error',
                    'message': str(e)
