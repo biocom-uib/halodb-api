@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`mags` (
     REFERENCES `halodb`.`method` (`id`),
   INDEX `fk_mags_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_mags_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`),
   INDEX `fk_mags_binning_1_idx` (`bins` ASC),
   CONSTRAINT `fk_mags_binning_1`
