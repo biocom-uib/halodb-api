@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`single_cell` (
     REFERENCES `halodb`.`method` (`id`),
   INDEX `fk_single_cell_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_single_cell_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`)
 )
 ENGINE = InnoDB

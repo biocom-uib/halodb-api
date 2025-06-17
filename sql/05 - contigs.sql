@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`contigs` (
     REFERENCES `halodb`.`user` (`id`),
   INDEX `fk_contigs_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_contigs_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`)
 )
 ENGINE = InnoDB

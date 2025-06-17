@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`genome` (
     REFERENCES `halodb`.`method` (`id`),
   INDEX `fk_genome_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_genome_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`),
   INDEX `fk_genome_extraction_1_idx` (`dnae` ASC),
   CONSTRAINT `fk_genome_extraction_1`

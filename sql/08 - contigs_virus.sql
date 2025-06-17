@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`contigs_virus` (
     REFERENCES `halodb`.`method` (`id`),
   INDEX `fk_contigs_virus_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_contigs_virus_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`)
 )
 ENGINE = InnoDB

@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `halodb`.`plasmid` (
     REFERENCES `halodb`.`user` (`id`),
   INDEX `fk_plasmid_assembly_1_idx` (`asem` ASC),
   CONSTRAINT `fk_plasmid_assembly_1`
-    FOREIGN KEY (`id`)
+    FOREIGN KEY (`asem`)
     REFERENCES `halodb`.`assembly` (`id`)
 )
 ENGINE = InnoDB
