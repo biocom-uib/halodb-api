@@ -2,6 +2,21 @@
 USE `halodb` ;
 
 
+insert into hkgenes (`gene`) values
+("16S"),
+("rpoB"),
+("recA"),
+("gyrB"),
+("atpD"),
+("dnaK"),
+("groEL"),
+("rplB"),
+("rpsL"),
+("infB"),
+("fusA"),
+("rpoA");
+
+
 insert into method (description) values
 ("BUSCO"),
 ("CheckM"),

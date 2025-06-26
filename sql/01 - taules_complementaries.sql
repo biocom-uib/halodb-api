@@ -22,7 +22,8 @@ DROP TABLE IF EXISTS `halodb`.`hkgenes` ;
 CREATE TABLE IF NOT EXISTS `halodb`.`hkgenes` (
   `id` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification of a housekeeping gene',
   `gene` VARCHAR(25) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_bin' NULL DEFAULT NULL COMMENT 'table of generic genes. To be used as housekeeping genes.',
-  PRIMARY KEY (`id`))
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `gene_UNIQUE` (`gene`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
@@ -36,11 +37,22 @@ DROP TABLE IF EXISTS `halodb`.`keywords` ;
 CREATE TABLE IF NOT EXISTS `halodb`.`keywords` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `keyword` VARCHAR(50) CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci' NOT NULL,
-    PRIMARY KEY (`id`))
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `keyword_UNIQUE` (`keyword`))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
+-- -----------------------------------------------------
+-- Table `halodb`.`dois`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `halodb`.`dois` ;
+CREATE TABLE IF NOT EXISTS `halodb`.`dois` (
+    `id` int NOT NULL AUTO_INCREMENT,
+    `value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `value_UNIQUE` (`value`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 -- -----------------------------------------------------

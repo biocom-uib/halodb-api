@@ -2,8 +2,8 @@ import datetime
 import decimal
 import re
 
-from flask import request, abort
-from sqlalchemy.orm import class_mapper
+# from flask import request, abort
+# from sqlalchemy.orm import class_mapper
 
 def normalize(element: str) -> str:
     """
@@ -15,10 +15,10 @@ def normalize(element: str) -> str:
 
 
 def as_dict(obj):
-    data = obj.__dict__
+    data = obj.__dict__.copy()
     if '_sa_instance_state' in data:
         data.pop('_sa_instance_state')
-    return data.copy()
+    return data
 
 
 def from_dict(self, data):

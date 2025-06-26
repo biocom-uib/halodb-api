@@ -5,8 +5,8 @@ from flask import request, abort, Response, jsonify
 from typing import Callable
 
 
-from google.oauth2 import id_token
-from google.auth.transport import requests
+# from google.oauth2 import id_token
+# from google.auth.transport import requests
 
 import jwt
 
@@ -48,14 +48,14 @@ def verify_token(token, abort_if_expired=True):
         return decoded_token
     except jwt.exceptions.ExpiredSignatureError:
         abort(403, "Expired token")
-    except jwt.exceptions.InvalidTokenError:
-        abort(403, "Invalid token")
-    except jwt.exceptions.DecodeError:
-        abort(404, "Validation failed")
-    except jwt.exceptions.InvalidKeyError:
-        abort(403, "Invalid key")
     except jwt.exceptions.InvalidSignatureError:
         abort(403, "Certificate fetch error")
+    except jwt.exceptions.DecodeError:
+        abort(404, "Validation failed")
+    except jwt.exceptions.InvalidTokenError:
+        abort(403, "Invalid token")
+    except jwt.exceptions.InvalidKeyError:
+        abort(403, "Invalid key")
 
 
 def time_elapsed(original_time):
@@ -90,13 +90,13 @@ def required_token(func: Callable) -> Callable:
 
         message = {'message':payload, 'token':update_token(decoded_token, token)}
 
-        response = Response(response=json.dumps(message, default=serialize_datetime),
-                            status=status,
-                            mimetype="application/json")
+        # response = Response(response=json.dumps(message, default=serialize_datetime),
+        #                     status=status,
+        #                     mimetype="application/json")
+        response = jsonify(data=message, status=status, mimetype="application/json")
         return response
 
     return wrapper
-
 
 def not_required_token(func: Callable) -> Callable:
     @wraps(func)
