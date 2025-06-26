@@ -1,4 +1,4 @@
-from api.db import db
+# from api.db import db
 from api.db.db import DatabaseInstance, Base
 from api.utils import from_dict, as_dict
 
@@ -10,6 +10,7 @@ Author = Base.classes.author
 Binning = Base.classes.binning
 Contigs = Base.classes.contigs
 Contigs_Virus = Base.classes.contigs_virus
+Dois = Base.classes.dois
 Experiment = Base.classes.experiment
 Extraction = Base.classes.extraction
 Fraction = Base.classes.fraction
@@ -81,6 +82,7 @@ class_list = [
     Binning,
     Contigs,
     Contigs_Virus,
+    Dois,
     Experiment,
     Extraction,
     Fraction,
