@@ -577,6 +577,26 @@ DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
 
+-- -----------------------------------------------------
+-- Table `halodb`.`sample_has_dois`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `halodb`.`sample_has_dois` ;
+
+CREATE TABLE IF NOT EXISTS `halodb`.`sample_has_dois` (
+      `sample_id` INT NOT NULL,
+      `doi_id` INT NOT NULL,
+      PRIMARY KEY (`sample_id`, `doi_id`),
+      INDEX `fk_sample_has_dois_doi_1_idx` (`doi_id` ASC),
+      INDEX `fk_sample_has_dois_sample_1_idx` (`sample_id` ASC),
+      CONSTRAINT `fk_sample_has_dois_doi_1`
+          FOREIGN KEY (`doi_id`)
+              REFERENCES `halodb`.`dois` (`id`),
+      CONSTRAINT `fk_sample_has_dois_sample_1`
+          FOREIGN KEY (`sample_id`)
+              REFERENCES `halodb`.`sample` (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 -- -----------------------------------------------------
 -- -----------------------------------------------------

@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 # ##from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.automap import automap_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from api import config, log
 
@@ -38,7 +38,10 @@ class DatabaseInstance:
         Base.prepare(autoload_with=self.engine,
                      name_for_collection_relationship=pluralize_collection)
 
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        # self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.session_factory = sessionmaker(bind=self.engine, autoflush=True, autocommit=False, expire_on_commit=True)
+        self.session_scoped = scoped_session(self.session_factory)
+
         # ## self.db.metadata.reflect(self.engine)
         #### Base.metadata.create_all(self.engine)
 
@@ -46,7 +49,9 @@ class DatabaseInstance:
         return self.db.init_app(app)
 
     def session(self):
-        return self.SessionLocal()
+        # return self.SessionLocal()
+        return self.session_scoped()
+
 
     def cursor(self):
         return self.engine.raw_connection().cursor()

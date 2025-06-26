@@ -7,7 +7,8 @@ from api.db.models import Project, Sample, Experiment, Trimmed_Reads, Contigs, P
     Group_Shared_Contigs, Group_Shared_Predicted_Genes, Group_Shared_Mags, Group_Shared_Contigs_Virus, \
     Group_Shared_Genome, Group_Shared_Single_Cell, Group_Shared_Plasmid, User_Shared_Plasmid, User_Shared_Single_Cell, \
     User_Shared_Experiment, User_Shared_Genome, User_Shared_Contigs_Virus, User_Shared_Mags, \
-    User_Shared_Predicted_Genes, User_Shared_Contigs, User_Shared_Trimmed_Reads, Group_Shared_Sample, User_Shared_Sample
+    User_Shared_Predicted_Genes, User_Shared_Contigs, User_Shared_Trimmed_Reads, Group_Shared_Sample, \
+    User_Shared_Sample, Dois
 from api.utils import convert_to_coordinate, commas_to_dot, convert_to_dict
 
 sequences = {
@@ -274,9 +275,11 @@ supplementaries = {
 }
 
 multi_complementaries = {
-    "keywords_id": "Keywords",
-    "publication_id": "Publication",
-    "hkgn": "Hkgenes"
+    # "keywords_id": "Keywords",
+    # "publication_id": "Publication",
+    "keywords": Keywords,
+    "dois": Dois,
+    "hkgenes": Hkgenes
 }
 
 extra_headers = ['public', 'owned', 'shared_by_group', 'shared_by_others', 'access_mode',
@@ -519,6 +522,9 @@ def get_reference_tables(sequence_name: str, step_name: str):
     :param step_name:
     :return: the pair table-parent table corresponding to the sequence, or None if the sequence is not found
     """
+    if sequence_name is None and step_name == 'SAMPLE':
+        return Sample, None
+
     if sequence_name in sequences:
         if step_name in sequence_step_to_table:
             actual = sequence_step_to_table[step_name]['table']
@@ -555,3 +561,4 @@ def get_sharing_tables(sequence_step: str):
         return sequence_step_sharings[sequence_step]
     else:
         return None
+
