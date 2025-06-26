@@ -41,6 +41,39 @@ def validate_sequence_step(sequence: str, step: str):
 
     return sequence, step
 
+@sequence_page.route('/public/<string:step>/', methods=['GET'])
+@wrap_error
+# @limiter.limit("100/minute")
+@get_params
+@log_params
+@not_required_token
+def get_public_sequence_step(params: dict, step: str, **kwargs):
+    """
+    This method is used to get the public omic sequence step. The step is identified by its name.
+    :param step:
+    :return:
+    """
+    step = normalize(step)
+    if not is_valid_step(step):
+        abort(400, f"Invalid step {step}")
+
+    log.info(f'Request received for getting public {step} sequence step')
+
+    # The uid is not needed, as the data is public
+    public_list = SampleController.get_public_sequence_step(step)
+
+    if public_list is None:
+        result = None
+    else:
+        result = [x['id'] for x in public_list]
+    message = {'status': 'success',
+               'omic sequence step': step,
+               'public_ids': result
+               }
+    result_status = 200
+
+    return message, result_status
+
 @sequence_page.route('/<string:step>/', methods=['POST'])
 @wrap_error
 # @limiter.limit("100/minute")
