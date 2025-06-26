@@ -1,8 +1,9 @@
 import datetime
+import json
 
 from flask import Blueprint
+from flask import Response, request
 from flask import abort, send_file
-from flask import request
 from werkzeug.utils import secure_filename
 
 from api import log
@@ -13,6 +14,7 @@ from api.decorators import wrap_error, get_params, log_params
 from api.field_utils import exclude_param_files, exclude_forbidden_fields, valid_field, is_valid_sequence, \
     is_valid_step, get_step_table, are_valid_sequence_step, filter_coordinates, filter_floats
 from api.utils import normalize
+from api.utils import serialize_datetime
 
 sequence_page = Blueprint('sequence_page', __name__)
 
@@ -25,8 +27,8 @@ sequence_page = Blueprint('sequence_page', __name__)
 
 def validate_sequence_step(sequence: str, step: str):
     """
-    Validate the omic sequence and the corresponding step. If one of them is not valid, abort the request.
-    The sequence has to be a valid sequence, and the step has to be a valid step for the sequence.
+    Validate the omic sequence and the corresponding step. If one of them in not valid, abort the request.
+    The sequence has to be a valid sequence and the step has to be a valid step for the sequence.
     :param sequence:
     :param step:
     :return:
@@ -38,40 +40,6 @@ def validate_sequence_step(sequence: str, step: str):
         abort(400, f"Step '{step}' is not valid in the omic sequence '{sequence}'")
 
     return sequence, step
-
-
-@sequence_page.route('/public/<string:step>/', methods=['GET'])
-@wrap_error
-# @limiter.limit("100/minute")
-@get_params
-@log_params
-@not_required_token
-def get_public_sequence_step(params: dict, step: str, **kwargs):
-    """
-    This method is used to get the public omic sequence step. The step is identified by its name.
-    :param step:
-    :return:
-    """
-    step = normalize(step)
-    if not is_valid_step(step):
-        abort(400, f"Invalid step {step}")
-
-    log.info(f'Request received for getting public {step} sequence step')
-
-    # The uid is not needed, as the data is public
-    public_list = SampleController.get_public_sequence_step(step)
-
-    if public_list is None:
-        result = None
-    else:
-        result = [x['id'] for x in public_list]
-    message = {'status': 'success',
-               'omic sequence step': step,
-               'public_ids': result
-               }
-    result_status = 200
-
-    return message, result_status
 
 @sequence_page.route('/<string:step>/', methods=['POST'])
 @wrap_error
@@ -116,7 +84,7 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
 
     log.info('Request received for uploading a sequence')
 
-    # The fields related to the files are treated specially.
+    # The fields related to the files are treated in a special way.
     # Then, they are not included in the creation of the omic sequence step.
     params = exclude_param_files(params)
     params = exclude_forbidden_fields(params, sequence, step)
@@ -174,12 +142,12 @@ def upload_sequence_step(params: dict, step: str, **kwargs):
 
 def get_user_and_step_by_uuid(sequence_step, uid, step_id):
     """
-    Given a user uid and a step id, return the user id and the step data,
-    if the user can access the sequence step.
+    Given a user uid and a step id, return the user id and the step data.
+    if the sequence step can be accessed by the user.
 
-    :param sequence_step: The step to be used
-    :param uid: The uid of the user
-    :param step_id: The id of the step
+    :param sequence_step: the step to be used
+    :param uid: the uid of the user
+    :param step_id: the id of the step
     :return:
     """
     table = get_step_table(sequence_step)
@@ -208,17 +176,13 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
 @log_params
 @required_token
 def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
-
-    step = normalize(step)
-    if step != 'SAMPLE' and 'sequence' not in params:
+    if 'sequence' not in params:
         abort(400, "Omic sequence not provided")
 
-    if 'sequence' in params:
-        sequence = normalize(params['sequence'])
-        sequence, step = validate_sequence_step(sequence, step)
-        params.pop('sequence')
-    else:
-        sequence = None
+    sequence = normalize(params['sequence'])
+    step = normalize(step)
+    sequence, step = validate_sequence_step(sequence, step)
+    params.pop('sequence')
 
     # if 'id' not in params:
     #     abort(400, "step id not provided")
@@ -236,7 +200,7 @@ def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
     if access is None or access != 'readwrite':
         abort(403, f"User {user_id} doesn't have the privileges to modify the {step} with id {step_id}")
 
-    # The fields related to the files are treated specially.
+    # The fields related to the files are treated in a special way.
     # Then, they are not included in the creation of the omic sequence step.
     params = exclude_param_files(params)
     params = exclude_forbidden_fields(params)
@@ -405,8 +369,8 @@ def make_step_public(step: str, step_id: int, **kwargs):
     """
     Make public an omic sequence step. The step is identified by the step name and its id.
 
-    :param step: The omic sequence step to be shared.
-    :param step_id: The step identifier.
+    :param step: the omic sequence step to be shared.
+    :param step_id: the step identifier.
     :return:
     """
     try:
@@ -438,13 +402,13 @@ def share_step_user(params: dict, step: str, step_id: int, **kwargs):
     Share an omic sequence step with another user. A user, owner of a concrete step, shares it with
     another user. A step_id and a user_id (the invited user) are needed, also the access mode, that can be
     read o readwrite.
-    :param step: The omic step of to take into account.
-    :param step_id: The step identifier.
+    :param step: the omic step of to take into account.
+    :param step_id: the step identifier.
     :param params:
-        The data is received in a JSON format, with the following fields:
+        The data is received in a json format, with the following fields:
 
             * step_id: the integer unique identifier of the step.
-            * user_id: the user with which to share the step.
+            * user_id: the user with which share the step.
             * readwrite: True if the invited user can modify the step.
 
     :return:
@@ -491,9 +455,9 @@ def unshare_step_other_user(step:str, step_id: int, user_uuid: str, **kwargs):
     A user, the owner of a metabolic sequence step, stops sharing the step with another user. A
     step and an id_user (the invited user) are needed.
 
-    :param step: The omic step of the omic sequence step.
-    :param step_id: The sequence step identifier, the integer unique identifier of the step.
-    :param user_uuid: The user with which to unshare the step.
+    :param step: the omic step of the omic sequence step.
+    :param step_id: the sequence step identifier, the integer unique identifier of the step.
+    :param user_uuid: the user with which unshare the step.
     :return:
     """
     try:
@@ -537,7 +501,7 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
     Share an omic sequence step with a group. A user, owner of the omic sequence step, shares the step with
     a group. A step_id and a group_id are needed.
 
-    The data has to be in JSON format with the fields:
+    The data has to be in json format with the fields:
     * step_id: the omic sequence step identifier.
     * group_id: the with which to share the step.
     * readwrite: True if the step can be modified by the members of the group, or they are only allowed to read the
@@ -578,9 +542,9 @@ def share_step_group(params: dict, step: str, step_id: int, **kwargs):
 def unshare_step_group(step: str, step_id: int, group_id: int, **kwargs):
     """
     Stops sharing the metabolic sequence step with a group. A step_id and a group_id are needed.
-    :param step: The omic sequence step to be considered.
-    :param step_id: The step identifier.
-    :param group_id: The user with which to share the data.
+    :param step: the omic sequence step to be considered.
+    :param step_id: the step identifier.
+    :param group_id: the user with which to share the data.
     :return:
     """
     try:
