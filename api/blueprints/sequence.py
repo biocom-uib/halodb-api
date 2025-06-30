@@ -209,13 +209,17 @@ def get_user_and_step_by_uuid(sequence_step, uid, step_id):
 @log_params
 @required_token
 def update_fields_step(params: dict, step: str, step_id: int, **kwargs):
-    if 'sequence' not in params:
-        abort(400, "Omic sequence not provided")
 
-    sequence = normalize(params['sequence'])
     step = normalize(step)
-    sequence, step = validate_sequence_step(sequence, step)
-    params.pop('sequence')
+    if step == 'SAMPLE':
+        sequence = None
+    else:
+        if 'sequence' not in params:
+            abort(400, "Omic sequence not provided")
+        sequence = normalize(params['sequence'])
+
+        sequence, step = validate_sequence_step(sequence, step)
+        params.pop('sequence')
 
     # if 'id' not in params:
     #     abort(400, "step id not provided")
