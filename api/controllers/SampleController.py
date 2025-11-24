@@ -13,7 +13,7 @@ from api.db.models import Sample, User_Shared_Sample, Group, User_Has_Group, Tem
     Keywords, Hkgenes, Dois
 from api.field_utils import valid_field, fix_times, complementaries, supplementaries, multi_complementaries, \
     get_reference_tables, get_step_table, get_sharing_tables, is_file_field, get_file_name_field, get_stored_procedure, \
-    merge_extra_fields, sequence_step_sharings, filter_dict, get_file_name_field_raw
+    merge_extra_fields, sequence_step_sharings, filter_dict, get_file_name_field_raw, multi_complementaries_by_Step
 from api.utils import convert_to_dict, to_dict, normalize
 
 
@@ -62,7 +62,7 @@ class SampleController:
         return wrong_list
 
     @classmethod
-    def filter_description_fields(cls, step):
+    def filter_description_fields(cls, step_id, step):
         # This method is used to replace the ids of the fields that are supposed to be ids to other tables
         # with the description of the element in the other table. This way the user can see the description
         # of the element instead of the id.
@@ -91,11 +91,18 @@ class SampleController:
                             step[key] = None
 
         # keywords, publication and hkgn are slightly more complex than the others
-        for key, value in multi_complementaries.items():
-            if key in step and step[key] is not None and isinstance(step[key], list) and len(step[key]) > 0:
-                step[key] = step[key]
-            else:
-                step[key] = None
+        if multi_complementaries_by_Step[step_id] is not None:
+            table = get_step_table(step_id)
+            the_step = table.query.get(step['id'])
+
+            for key, value in multi_complementaries.items():
+                if key in multi_complementaries_by_Step[step_id]:
+                    result = None
+                    values = getattr(the_step, key)
+                    if values is not None and len(values) > 0:
+                        result = [{value['id']:getattr(item, value['id']),
+                                   value['value']:getattr(item, value['value'])} for item in values if isinstance(item, value['class'])]
+                    step[key] = result
 
         # finally keep only the fields that are not None
         step = {k: v for k, v in step.items() if v is not None}
@@ -111,8 +118,7 @@ class SampleController:
             result = list(cursor.fetchall())
 
         data = [cls.filter_description_fields
-                (merge_extra_fields
-                 (convert_to_dict(row, column_names))) for row in result]
+                (step, merge_extra_fields(convert_to_dict(row, column_names))) for row in result]
 
         return data
 
@@ -216,6 +222,7 @@ class SampleController:
                     if valid_field(key) and key not in multi_complementaries:
                        setattr(step_to_edit, key, value)
 
+                cls.add_multicomplementaries(step, step_id, step_to_edit)
                 cls.update_multi_complementaries(step_to_edit, new_data, session)
 
                 setattr(step_to_edit, 'updated', datetime.datetime.now())
@@ -540,8 +547,6 @@ class SampleController:
             except Exception as e:
                 session.rollback()
                 raise e
-
-
 
     @classmethod
     def update_multi_complementaries(cls, the_step, data, the_session):
