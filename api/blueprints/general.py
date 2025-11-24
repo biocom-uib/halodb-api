@@ -174,7 +174,7 @@ def get_table_data(table: str):
         if table in valid_tables:
             o2 = valid_tables[table].query.all()
         elif table in multi_complementaries:
-            o2 = multi_complementaries[table].query.all()
+            o2 = multi_complementaries[table]['class'].query.all()
         else:
             o2 = complementary_valid_tables[table].query.all()
 

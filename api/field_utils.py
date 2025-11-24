@@ -277,9 +277,23 @@ supplementaries = {
 multi_complementaries = {
     # "keywords_id": "Keywords",
     # "publication_id": "Publication",
-    "keywords": Keywords,
-    "dois": Dois,
-    "hkgenes": Hkgenes
+    "keywords": {"id": "id", "value": "keyword", "class": Keywords},
+    "dois": {"id": "id", "value": "value", "class": Dois},
+    "hkgenes":  {"id": "id", "value": "gene", "class": Hkgenes}
+}
+
+multi_complementaries_by_Step = {
+    "SAMPLE": ["keywords", "dois"],
+    "RAW READS": None,
+    "TRIMMED READS": None,
+    "CONTIGS": None,
+    "PREDICTED GENES": None,
+    "MAGS": ["hkgenes"],
+    "CONTIGS VIRUS": None,
+    "GENOME": ["hkgenes"],
+    "PEPTIDES": None,
+    "SINGLE CELL GENOME": ["hkgenes"],
+    "PLASMID": ["hkgenes"]
 }
 
 extra_headers = ['public', 'owned', 'shared_by_group', 'shared_by_others', 'access_mode',
