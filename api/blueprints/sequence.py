@@ -298,7 +298,7 @@ def get_step(step: str, step_id: int, **kwargs):
         log.info(f'user with {uid = } has requested {step} with {step_id = }')
 
     message = {'status': 'success',
-               step: SampleController.filter_description_fields(the_step.as_dict())
+               step: SampleController.filter_description_fields(step, the_step.as_dict())
                }
     result_status = 200
 
